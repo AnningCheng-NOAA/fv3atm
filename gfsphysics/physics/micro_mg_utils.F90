@@ -172,8 +172,10 @@ real(r8), parameter, public :: bc = 2._r8
 real(r8), parameter, public :: as = 11.72_r8
 real(r8), parameter, public :: bs = 0.41_r8
 ! cloud ice
-real(r8), parameter, public :: ai = 700._r8
-real(r8), parameter, public :: bi = 1._r8
+! Anning from 700 to 500
+real(r8), parameter, public :: ai = 500._r8
+! Anning from 1 to 0.8
+real(r8), parameter, public :: bi = 1.2_r8
 ! small cloud ice (r< 10 um) - sphere, bulk density
 real(r8), parameter, public :: aj = ac*((rhoi/rhows)**(bc/3._r8))*rhows/rhow
 real(r8), parameter, public :: bj = bc
@@ -1089,9 +1091,9 @@ subroutine sb2001v2_liq_autoconversion(pgam,qc,nc,qr,rho,relvar,au,nprc,nprc1,mg
        real(r8), dimension(mgncol), intent (out) :: nprc1
        real(r8), dimension(mgncol), intent (out) :: nprc
        real(r8) :: xs,lw, nw, beta6
-!      real(r8), parameter :: dcrit=1.0e-6, miu_disp=1.
-!      real(r8), parameter :: dcrit=1.0e-3, miu_disp=1.
-       real(r8), parameter :: dcrit = 2.0e-3, miu_disp = 0.8,     &
+!      real(r8), parameter :: dcrit=1.0e-6, miu_disp=1.,          &
+!      real(r8), parameter :: dcrit = 2.0e-3, miu_disp = 0.8,     &
+       real(r8), parameter :: dcrit=1.0e-4, miu_disp=1.,          &
                               con_nprc1 = two/2.6e-7_r8*1000._r8
        integer ::  i
 

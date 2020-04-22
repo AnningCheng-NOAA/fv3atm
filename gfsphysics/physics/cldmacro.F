@@ -677,21 +677,21 @@
      &,                       RI_cub = 6.4e-14, RL_cub = 1.0e-15
      &,                       fourb3 = 4.0/3.0
 
-       if (AF <= cfmin) then     ! Fix if Anvil cloud fraction too small
-         QV = QV + QLA + QIA
-         TE = TE - ALHLbCP*QLA - ALHSbCP*QIA
-         AF = 0.
-         QLA = 0.
-         QIA = 0.
+!      if (AF <= cfmin) then     ! Fix if Anvil cloud fraction too small
+!        QV = QV + QLA + QIA
+!        TE = TE - ALHLbCP*QLA - ALHSbCP*QIA
+!        AF = 0.
+!        QLA = 0.
+!        QIA = 0.
 
-         if ( CF <= cfmin) then  ! Fix if LS cloud fraction too small
-           QV  = QV + QLC + QIC
-           TE  = TE - ALHLbCP*QLC - ALHSbCP*QIC
-           CF  = 0.
-           QLC = 0.
-           QIC = 0.
-         endif
-       endif
+!        if ( CF <= cfmin) then  ! Fix if LS cloud fraction too small
+!          QV  = QV + QLC + QIC
+!          TE  = TE - ALHLbCP*QLC - ALHSbCP*QIC
+!          CF  = 0.
+!          QLC = 0.
+!          QIC = 0.
+!        endif
+!      endif
 
        if (QLC <= qc_min(1)) then     ! LS LIQUID too small
          QV  = QV + QLC
@@ -1012,7 +1012,8 @@
          elseif (TEn >= t_ice_max) then
            fqi = 0.0
          else
-           fqi = (1.0 - (te-t_ice_all)*t_ice_denom) ** ICEFRPWR
+           !Anning Cheng A bug here, Te should be Ten, 4/20/2020
+           fqi = (1.0 - (ten-t_ice_all)*t_ice_denom) ** ICEFRPWR
          endif
 
          DQS = 0.0
@@ -1079,40 +1080,44 @@
 !large scale  QCx is not in envi 
 
        QCx = QCo - QC
-!      Anning Cheng prevented unstable here
-!      if (QCx < -1.e-3) QCx = -1.e-3
+       !      Anning Cheng prevented unstable here
+       !Anning Cheng, limiting large T tend, 4/20/2020
        if (QCx < 0.0) then
+         QCx=max(QCx,-1.0e-3)
          dQCl = max(QCx, -QCl)
          dQCi = max(QCx-dQCl, -QCi)
        else
+         QCx=min(QCx,1.e-3)
          dQCi = QCx * fQi
          dQCl = QCx - dQCi
        end if
 
 !Anvil QAx is not in anvil 
        QAx = QAo - QA
-!      Anning Cheng prevented unstable here
-!      if(QAx < -1.e-3) QAx = -1.e-3
-
+       !Anning Cheng prevented unstable here
+       !Anning Cheng, limiting large T tend, 4/20/2020
        if (QAx < 0.0) then
+         QAx=max(QAx, -1.0e-3)
          dQAl = max(QAx, -QAl)
          dQAi = max(QAx-dQAl, -QAi)
        else
+         QAx=min(QAx, 1.e-3)
          dQAi = QAx * fQi
          dQAl = QAx - dQAi
        end if
-
-!     if(.false.) then !Anning turn it off causing unstable
-      if ( AF < 1.e-5 ) then
-        dQAi = -QAi
-        dQAl = -QAl
-        af   = 0.0
-      end if
-      if ( CF < 1.e-5 ) then
-        dQCi = -QCi
-        dQCl = -QCl
-        cf   = 0.0
-      end if
+      !Anning turn it off causing unstable, using cloud fraction to control ice and liquid
+      !is unphysical and causing large T tendency 
+!     if(.false.) then 
+!     if ( AF < 1.e-5 ) then
+!       dQAi = -QAi
+!       dQAl = -QAl
+!       af   = 0.0
+!     end if
+!     if ( CF < 1.e-5 ) then
+!       dQCi = -QCi
+!       dQCl = -QCl
+!       cf   = 0.0
+!     end if
 !     end if
 
       QAi = QAi + dQAi
@@ -1124,7 +1129,6 @@
 
       TE = TE + (alhlbcp * (dQAi+dQCi+dQAl+dQCl)
      &        +  alhfbcp * (dQAi+dQCi))
-
 
 
        if ( QAo <= 0. ) then
@@ -2170,7 +2174,6 @@
        NL = NL - dNil
        NI = NI + dNil
        TE = TE + (alhsbcp-alhlbcp)*dQil
-
        dQil  = 0.0
        dNil  = 0.0
        DQmax = 0.0
