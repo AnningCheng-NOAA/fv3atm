@@ -385,8 +385,8 @@ subroutine micro_mg_init(                                         &
 
   rhosu = 85000._r8 / (rair * tmelt)
 
-  ! Maximum temperature at which snow is allowed to exist
-  snowmelt = tmelt + two
+  ! Maximum temperature at which snow is allowed to exist, Anning 4/18/2020
+  snowmelt = tmelt + two + half
   ! Minimum temperature at which rain is allowed to exist
   rainfrze = tmelt - forty
 
@@ -2404,6 +2404,8 @@ subroutine micro_mg_tend (                                       &
               vap_dep(i,k) = dum - mnuccd(i,k)
            end if
         end if
+       ! Anning Cheng, limiting vap_dep, 04/7/2020
+       if(vap_dep(i,k)>2.e-6) vap_dep(i,k)=2.e-6
 
      end do
 
@@ -4016,50 +4018,51 @@ subroutine micro_mg_tend (                                       &
      ! remove any excess over-saturation, which is possible due to non-linearity when adding
      ! together all microphysical processes
      !-----------------------------------------------------------------
-     ! follow code similar to old CAM scheme
-     do k=1,nlev
-        do i=1,mgncol
+     ! follow code similar to old CAM scheme 
+     ! Anning Cheng 04/15/2020 remove because it produce too much T tendency
+     !do k=1,nlev
+     !   do i=1,mgncol
 
-           qtmp = q(i,k) + qvlat(i,k) * deltat
-           ttmp = t(i,k) + tlat(i,k)  * (deltat/cpp)
+     !     qtmp = q(i,k) + qvlat(i,k) * deltat
+     !     ttmp = t(i,k) + tlat(i,k)  * (deltat/cpp)
 
            ! use rhw to allow ice supersaturation
            !call qsat_water(ttmp, p(i,k), esn, qvn)
-           esn = min(fpvsl(ttmp), p(i,k))
-           qvn = epsqs*esn/(p(i,k)-omeps*esn) * qsfm(i,k)
+     !     esn = min(fpvsl(ttmp), p(i,k))
+     !     qvn = epsqs*esn/(p(i,k)-omeps*esn) * qsfm(i,k)
 !          qvn = epsqs*esn/(p(i,k)-omeps*esn)
 
 
-           if (qtmp > qvn .and. qvn > 0 .and. allow_sed_supersat) then
+     !     if (qtmp > qvn .and. qvn > 0 .and. allow_sed_supersat) then
               ! expression below is approximate since there may be ice deposition
-              dum = (qtmp-qvn)/(one+xxlv_squared*qvn/(cpp*rv*ttmp*ttmp)) * oneodt
+     !        dum = (qtmp-qvn)/(one+xxlv_squared*qvn/(cpp*rv*ttmp*ttmp)) * oneodt
               ! add to output cme
-              cmeout(i,k) = cmeout(i,k) + dum
+     !        cmeout(i,k) = cmeout(i,k) + dum
               ! now add to tendencies, partition between liquid and ice based on temperature
-              if (ttmp > 268.15_r8) then
-                 dum1 = zero
+     !        if (ttmp > 268.15_r8) then
+     !           dum1 = zero
                  ! now add to tendencies, partition between liquid and ice based on te
                  !-------------------------------------------------------
-              else if (ttmp < 238.15_r8) then
-                 dum1 = one
-              else
-                 dum1 = (268.15_r8-ttmp)/30._r8
-              end if
+     !        else if (ttmp < 238.15_r8) then
+     !           dum1 = one
+     !        else
+     !           dum1 = (268.15_r8-ttmp)/30._r8
+     !        end if
 
-              tx1 = xxls*dum1 + xxlv*(one-dum1)
-              dum = (qtmp-qvn)/(one+tx1*tx1*qvn/(cpp*rv*ttmp*ttmp)) * oneodt
-              tx2 = dum*(one-dum1)
-              qctend(i,k)   = qctend(i,k) + tx2
-              qcrestot(i,k) = tx2                         ! for output
-              qitend(i,k)   = qitend(i,k) + dum*dum1
-              qirestot(i,k) = dum*dum1
-              qvlat(i,k)    = qvlat(i,k) - dum
+     !        tx1 = xxls*dum1 + xxlv*(one-dum1)
+     !        dum = (qtmp-qvn)/(one+tx1*tx1*qvn/(cpp*rv*ttmp*ttmp)) * oneodt
+     !        tx2 = dum*(one-dum1)
+     !        qctend(i,k)   = qctend(i,k) + tx2
+     !        qcrestot(i,k) = tx2                         ! for output
+     !        qitend(i,k)   = qitend(i,k) + dum*dum1
+     !        qirestot(i,k) = dum*dum1
+     !        qvlat(i,k)    = qvlat(i,k) - dum
               ! for output
-              qvres(i,k)    = -dum
-              tlat(i,k)     = tlat(i,k) + dum*tx1
-           end if
-        enddo 
-     enddo 
+     !        qvres(i,k)    = -dum
+     !        tlat(i,k)     = tlat(i,k) + dum*tx1
+     !     end if
+     !  enddo 
+     !enddo 
   end if
 
 ! if (lprnt) write(0,*)' tlat7=',tlat(1,:)*deltat

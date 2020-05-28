@@ -3826,7 +3826,7 @@ module module_physics_driver
 !           if (lprnt) write(0,*)'befcsgt0=',Stateout%gt0(ipr,:)
 !           if (lprnt) write(0,*)'befcstke=',clw(ipr,1:25,ntk)
 
-            allocate (sigmatot(im,levs), sigmafrac(im,levs))
+            allocate (sigmatot(im,levs+1), sigmafrac(im,levs))
 
 ! JLS NOTE:  The variable rain1 output from cs_convr (called prec inside the subroutine) is a precipitation flux (kg/m2/sec),
 !            not meters LWE like the other schemes.  It is converted to m after the call to cs_convr.
@@ -3842,6 +3842,7 @@ module module_physics_driver
                            Model%cs_parm(4), Model%cs_parm(9), sigmatot,    &
 !                          Model%cs_parm(4), sigmai, sigmatot, vverti,      &
                            Model%do_aw, Model%do_awdd, Model%flx_form,      &
+                           Model%c0s_deep,Model%c1_deep,                    &
                            lprnt, ipr, kcnv, QLCN, QICN,                    &
                            w_upi, cf_upi, CNV_MFD,           CNV_DQLDT,     &
 !                          w_upi, cf_upi, CNV_MFD, CNV_PRC3, CNV_DQLDT,     &
