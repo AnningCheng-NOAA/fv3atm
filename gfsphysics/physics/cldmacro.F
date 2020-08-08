@@ -1,4 +1,4 @@
-      module cldmacro
+       module cldmacro
 !=======================================================================
 !      Anning Cheng 2/18/2016 replaced GEO condensation scheme
 !      with those from 2M microphysics
@@ -33,6 +33,7 @@
        public meltfrz_inst
        public fix_up_clouds_2M
        PUBLIC CLOUD_PTR_STUBS
+       PUBLIC hystpdf
 
 !! Some parameters set by PHYSPARAMS
 
@@ -433,7 +434,6 @@
      &                       SCICE_dev(I,K) ,  CLDFRC_dev(I,K),
      &                       ANVFRC_dev(I,K),  PFRZ_dev(I,K), pdfflag)
 
-
 !=============Collect convective precip==============
 
 !*********************** begin of if(false)********************************
@@ -773,7 +773,8 @@
 
        do k=1,lm
          do i=1,irun
-           if (qv(i,k) > 1.0e-6) then
+           !Anning Cheng 07/21/2020, anvil cloud has to be small to be call the following
+           if (qv(i,k)>1.0e-6.and.AF(i,k)<0.99) then
              QC    = QCl(i,k) + QCi(i,k)
              QA    = QAl(i,k) + QAi(i,k)
            !Anning do not let empty cloud exist
@@ -827,14 +828,14 @@
              AF(i,k) = CFALL * FQA
              CF(i,k) = CFALL - AF(i,k)
 
-!          if (TE(i,k) > T_ICE_ALL) then   ! don't do anything else for cirrus
+           if (TE(i,k) > T_ICE_ALL) then   ! don't do anything else for cirrus
 
                call hystpdf( DT, ALPHA(i,k), PDFSHAPE, qc_min, PL(i,k)
      &,                      QV(i,k),    QCl(i,k), QAl(i,k), QCi(i,k)
      &,                      QAi(i,k),   TE(i,k),  CF(i,k),  AF(i,k)
      &,                      SCICE(i,k), NI(i,k),  NL(i,k))
 
-!          endif
+           endif
           !Anning do not let empty cloud exist
              if(QCl(i,k)+QCi(i,k) <= 0.0) CF(i,k) = 0.0
              if(QAl(i,k)+QAi(i,k) <= 0.0) AF(i,k) = 0.0
@@ -859,7 +860,7 @@
        real,    intent(inout) :: TE, QV, QCl, QCi, CF, QAl, QAi, AF,
      &                           NI, NL, SCICE
 
-       integer, parameter :: nmax=10
+       integer, parameter :: nmax=4
 
        real :: QCO, QVO, CFO, QAO, TAU
        real :: QT, QMX, QMN, DQ, QVtop, sigmaqt1, sigmaqt2, qsnx
@@ -929,7 +930,8 @@
        if (AF < 1.0) then
          tmpARR = 1.0 / (1.0-AF)
        else
-         tmpARR = 0.0
+         return !Anning 7/21/2020 no adjustment needed for AF=1
+!        tmpARR = 0.0
        endif
 
        CFx = CF*tmpARR
@@ -980,7 +982,7 @@
          call pdffrac(PDFSHAPE,qt,sigmaqt1,sigmaqt2,qsnx,CFn)
          call pdfcondensate(PDFSHAPE,qt,sigmaqt1,sigmaqt2,qsnx,QCn,CFn)
 
-         DQCALL = QCn - QCp
+!        DQCALL = QCn - QCp
          CF = CFn * ( 1.0-AF)
 
 !        call Bergeron_iter (DT, PL, TEp, QT, QCi, QAi, QCl, QAl,
@@ -1016,7 +1018,6 @@
            fqi = (1.0 - (ten-t_ice_all)*t_ice_denom) ** ICEFRPWR
          endif
 
-         DQS = 0.0
 
          if (n < nmax) then
            esn    = min(fpvs(TEn), pl100)
@@ -1037,8 +1038,8 @@
              end if
              desdt = hltalt*esn/(rgasv*TEn*TEn) + tterm*trinv
              dqs   = QSn*pl100*desdt / (esn*(pl100-omeps*esn))
-!          else
-!            DQS = 0.0
+           else
+             DQS = 0.0
            endif
          endif
 
@@ -1327,11 +1328,11 @@
        TEND = DMF*iMASS * SCLMFDFR
        AF   = min(AF + TEND*DT, 1.0)
 
-       if ( AF < 1.0 ) then
-         QVx = ( QV - QS * AF )/(1.-AF)
-       else
-         QVx = QS
-       end if
+!      if ( AF < 1.0 ) then
+!        QVx = ( QV - QS * AF )/(1.-AF)
+!      else
+!        QVx = QS
+!      end if
 
 !      if (STRATEGY == 1) then
 !        if ( (( QVx - minrhx*QS ) < 0.0 ) .and. (AF > 0.) ) then
@@ -2073,11 +2074,11 @@
       QA = QAl + QAi
       QC = QCl + QCi
       CFALL = AF
-
-      if ( CFALL >= 1.0 ) then
-        PF = 0.0
-        return
-      end if
+!     Anning 07/22/2020 nucleation can occur in AF
+!     if ( CFALL >= 1.0 ) then
+!       PF = 0.0
+!       return
+!     end if
 
 !     QSn = QSATIC( TE , PL*100.0 , DQ=DQSx )
 !     call vqsatd2_ice_single(TE,PL*100.0,esl,QSn,DQSx)
@@ -2119,7 +2120,8 @@
 
       call pdffrac(pdfflag,qt,sigmaqt1,sigmaqt2,qsn,CFio)
 
-      PF = min(max(CFio*(1.0-CFALL), 0.0), 0.999)
+!     PF = min(max(CFio*(1.0-CFALL), 0.0), 0.999)
+      PF = min(max(CFio*(1.0-CFALL)+CFALL, 0.0), 0.999)
 
 
       end subroutine Pfreezing

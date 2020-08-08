@@ -432,8 +432,8 @@ module cs_conv
 !          CNV_PRC3(i,k)  = 0.0
            CNV_NDROP(i,k) = 0.0
            CNV_NICE(i,k)  = 0.0
-           cf_upi(i,k)    = max(0.0, min(1.0, 0.5*(sigma(i,k)+sigma(i,kp1))))
-           CLCN(i,k)      = cf_upi(i,k)                     !downdraft is below updraft
+!          cf_upi(i,k)    = max(0.0,min(0.01*log(1.0+500*ud_mf(i,k)),0.1))
+!          CLCN(i,k)      = cf_upi(i,k)                     !downdraft is below updraft
 !!         clcn(i,k)      = max(0.0,min(0.01*log(1.0+500*ud_mf(i,k)/delta),0.25))
 
            w_upi(i,k)     = 0.0
@@ -467,9 +467,9 @@ module cs_conv
 !          CNV_PRC3(i,k)  = 0.0
            CNV_NDROP(i,k) = 0.0
            CNV_NICE(i,k)  = 0.0
-           cf_upi(i,k)    = max(0.0,min(0.01*log(1.0+500*ud_mf(i,k)),0.25))
+!          cf_upi(i,k)    = max(0.0,min(0.01*log(1.0+500*ud_mf(i,k)),0.1))
 !    &                                               500*ud_mf(i,k)),0.60))
-           CLCN(i,k)      = cf_upi(i,k)                     !downdraft is below updraft
+!          CLCN(i,k)      = cf_upi(i,k)                     !downdraft is below updraft
            
            w_upi(i,k)     = ud_mf(i,k)*(t(i,k)+epsvt*gdq(i,k,1)) * rair &
                           / (max(cf_upi(i,k),1.e-12)*gdp(i,k))

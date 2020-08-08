@@ -27,12 +27,12 @@
      &                         VIREPS => con_fvirt,                     &
      &                         latvap => con_hvap, latice => con_hfus
 
-!      use funcphys,      only: fpvs                ! saturation vapor pressure for water-ice mixed
+       use funcphys,      only: fpvs                ! saturation vapor pressure for water-ice mixed
 !      use funcphys,      only: fpvsl, fpvsi, fpvs  ! saturation vapor pressure for water,ice & mixed
        use aer_cloud,     only: AerProps, getINsubset,init_aer,         &
      &                          aerosol_activate,AerConversion1
        use cldmacro,      only: macro_cloud,meltfrz_inst,update_cld,    &
-     &                          meltfrz_inst, fix_up_clouds_2M
+     &                          meltfrz_inst,fix_up_clouds_2M,hystpdf
        use cldwat2m_micro,only: mmicro_pcond
        use micro_mg2_0,   only: micro_mg_tend2_0 => micro_mg_tend, qcvar2 => qcvar
        use micro_mg3_0,   only: micro_mg_tend3_0 => micro_mg_tend, qcvar3 => qcvar
@@ -100,7 +100,8 @@
        integer, dimension(im) :: kct
        real (kind=kind_phys) T_ICE_ALL, USE_AV_V,BKGTAU,LCCIRRUS,       &
      &    NPRE_FRAC, Nct, Wct, fcn, ksa1, tauxr8, DT_Moist, dt_r8,      &
-     &    TMAXLL, USURF,LTS_UP, LTS_LOW, MIN_EXP, fracover, c2_gw, est3
+     &    TMAXLL, USURF,LTS_UP, LTS_LOW, MIN_EXP, fracover, c2_gw, est3,&
+     &    onemrh, rhls, qstls
 
        real(kind=kind_phys), allocatable, dimension(:,:) ::             &
      &            CNV_MFD,         CNV_FICE,CNV_NDROP,CNV_NICE
@@ -226,7 +227,7 @@
      &,                                    ncnstr8 = 100.0e6
 
        real(kind=kind_phys):: k_gw, maxkh, tausurf_gw, overscale, tx1, rh1_r8
-       real(kind=kind_phys)::  t_ice_denom
+       real(kind=kind_phys)::  t_ice_denom, tx2, tx3
 
        integer, dimension(1)           :: lev_sed_strt      ! sedimentation start level
        real(kind=kind_phys), parameter :: sig_sed_strt=0.05 ! normalized pressure at sedimentation start
@@ -268,8 +269,10 @@
      &, 3e-5, 0.1  , 4.0   , 150./          ! Annings version
 !    &, 3e-5, 0.1  , 1.0   , 150./
 
-
 !      rhr8 = 1.0
+!      T_ICE_ALL = TICE - 40.0
+       T_ICE_ALL = CLOUDPARAMS(33) + TICE
+       t_ice_denom = 1.0 / (tice - t_ice_all)
        if(flipv) then
          DO K=1, LM
            ll = lm-k+1
@@ -441,6 +444,39 @@
            end if
          END DO
        END DO
+!      Anning Cheng, add clcn options for testing anvil cloud 07/13/2020
+      if (.not. skip_macro) then
+       do i=1,im
+         do k=1,lm
+           tx1       = plo(i,k)*100.0
+           est3      = min(tx1, fpvs(temp(i,k)))
+           qstls = min(eps*est3/max(tx1+epsm1*est3,1.0e-10),1.0)
+           tx3=qicn(i,k)+qlcn(i,k)
+           if(tx3>0.) then
+               rhls= max(0.0, min(1.0,(q1(i,k)+tx3)/qstls))
+               onemrh = max(1.e-10, 1.0-rhls)
+               tx1=100./min(max((onemrh*qstls)**0.49,0.0001),1.0)
+               tx2=max(min(tx1*tx3,50.0), 0.0)
+               clcn(i,k)= min(max(sqrt(sqrt(rhls))*(1.0-exp(-tx2)),0.0),1.0)
+!              clls(i,k)=clcn(i,k)*(qils(i,k)+qlls(i,k))/tx3
+!              clcn(i,k)=clcn(i,k)-clls(i,k)
+               clls(i,k)=min(1.0 - clcn(i,k),clls(i,k))
+               if(xlat(i)>-.275.and.xlat(i)<-.274.and.xlon(i)>5.153.and.xlon(i)<5.154.and.k==32)  &
+     &         write(*,*)"AAA0", k, xlat(i),xlon(i),clcn(i,k),clls(i,k),rhls,exp(-tx2)
+               if(xlat(i)>-.301.and.xlat(i)<-.300.and.xlon(i)>5.151.and.xlon(i)<5.152.and.k==29)  &
+     &         write(*,*)"AAA0", k, xlat(i),xlon(i),clcn(i,k),clls(i,k),rhls,exp(-tx2)
+           end if
+           if (.false.) then
+               !rhls= max(0.0, (q1(i,k)+tx3)/qstls)
+               !clcn(i,k)=min((rhls-0.8)*(rhls-0.8)/0.09,0.3)
+               clcn(i,k)= max(0.0,min(0.01*log(1.0+500*CNV_MFD(i,k)),0.6))
+               clls(i,k)=min(1.0 - clcn(i,k),clls(i,k))
+               !clls(i,k)=clcn(i,k)*(qils(i,k)+qlls(i,k))/tx3
+               !clcn(i,k)=clcn(i,k)-clls(i,k)
+           end if
+         enddo
+       enddo
+      end if
 
 !      do L=LM,1,-1
 !        do i=1,im
@@ -539,9 +575,6 @@
 
          enddo
        end do
-!      T_ICE_ALL = TICE - 40.0
-       T_ICE_ALL = CLOUDPARAMS(33) + TICE
-       t_ice_denom = 1.0 / (tice - t_ice_all)
 
 
        do l=1,lm
@@ -807,8 +840,8 @@
              swparc(K)      = 0.0
              smaxicer8(K)   = 0.0
              nheticer8(K)   = 0.0
-             sc_icer8(K)    = 2.0
-!            sc_icer8(K)    = 1.0
+!            sc_icer8(K)    = 2.0
+             sc_icer8(K)    = 1.0
              naair8(K)      = 0.0
              npccninr8(K)   = 0.0
              nlimicer8(K)   = 0.0
@@ -1000,12 +1033,22 @@
 !        call meltfrz_inst(IM, LM, TEMP, QLLS, QLCN, QILS, QICN, NCPL, NCPI)
 
 !============ a little treatment of cloud before micorphysics
-!        call update_cld(im,lm,DT_MOIST, ALPHT_X, qc_min                &
-!    &,                 pdfflag,       PLO , Q1, QLLS                   &
-!    &,                 QLCN, QILS,    QICN,   TEMP                     &
-!    &,                 CLLS, CLCN,    SC_ICE, NCPI                     &
-!    &,                 NCPL)
-!!   &,                 NCPL, INC_NUC)
+      if (.not. skip_macro) then
+        do k=1,lm
+          do i=1,im
+            if(temp(i,k) > t_ice_all) then
+              call hystpdf(DT_MOIST, ALPHT_X(i,k), pdfflag, qc_min, plo(i,k),     &
+     &                 q1(i,k), qlls(i,k), qlcn(i,k), qils(i,k), qicn(i,k),       &
+     &                 temp(i,k), clls(i,k), clcn(i,k), sc_ice(i,k),              &
+     &                 ncpi(i,k), ncpl(i,k))
+               if(xlat(i)>-.275.and.xlat(i)<-.274.and.xlon(i)>5.153.and.xlon(i)<5.154.and.k==38)  &
+     &        write(*,*)"AAA4", k, xlat(i),xlon(i),clcn(i,k),clls(i,k)
+               if(xlat(i)>-.301.and.xlat(i)<-.300.and.xlon(i)>5.151.and.xlon(i)<5.152.and.k==34)  &
+     &        write(*,*)"AAA4", k, xlat(i),xlon(i),clcn(i,k),clls(i,k)
+            end if
+          enddo
+        enddo
+      end if
 !============ Put cloud fraction back in contact with the PDF (Barahona et al., GMD, 2014)============
 
 !make sure QI , NI stay within T limits
@@ -1087,6 +1130,8 @@
 
 !         tx1 = MIN(CLLS(I,k) + CLCN(I,k), 0.99)
           tx1 = MIN(CLLS(I,k) + CLCN(I,k), 1.00)
+!       if(xlat(i)>0.605.and.xlat(i)<0.606.and.xlon(i)>5.916.and.xlon(i)<5.92)  &
+!    &  write(*,*)"AAA1", k, xlat(i),xlon(i),tx1
           if (tx1 > 0.0) then
             cldfr8(k) = min(max(tx1, 0.00001), 1.0)
           else
@@ -1582,6 +1627,14 @@
 
         do k=1,lm
           do i=1,im
+               if(xlat(i)>-.275.and.xlat(i)<-.274.and.xlon(i)>5.153.and.xlon(i)<5.154.and.k==32)  &
+     &        write(*,*)"AAA2", k, xlat(i),xlon(i),clcn(i,k),clls(i,k)
+               if(xlat(i)>-.301.and.xlat(i)<-.300.and.xlon(i)>5.151.and.xlon(i)<5.152.and.k==29)  &
+     &        write(*,*)"AAA2", k, xlat(i),xlon(i),clcn(i,k),clls(i,k)
+               if(xlat(i)>-.275.and.xlat(i)<-.274.and.xlon(i)>5.153.and.xlon(i)<5.154.and.k==38)  &
+     &        write(*,*)"AAA5", k, xlat(i),xlon(i),clcn(i,k),clls(i,k)
+               if(xlat(i)>-.301.and.xlat(i)<-.300.and.xlon(i)>5.151.and.xlon(i)<5.152.and.k==34)  &
+     &        write(*,*)"AAA5", k, xlat(i),xlon(i),clcn(i,k),clls(i,k)
             QL_TOT(I,K) = QLLS(I,K) + QLCN(I,K)
             QI_TOT(I,K) = QILS(I,K) + QICN(I,K)
 !

@@ -2851,13 +2851,12 @@ c
       if(mp_phys == 10) then
         do k=1,km
           do i=1,im
-            QLCN(i,k)     = qtr(i,k,2) - qlcn(i,k)
-            QICN(i,k)     = qtr(i,k,1) - qicn(i,k)
-            cf_upi(i,k)   = cnvc(i,k)
+            QLCN(i,k)     = max(0., qtr(i,k,2) - QLCN(i,k))
+            QICN(i,k)     = max(0., qtr(i,k,1) - QICN(i,k))
             w_upi(i,k)    = ud_mf(i,k)*t1(i,k)*rd /
      &                     (dt2*max(sigmagfm(i),1.e-12)*prslp(i,k))
             CNV_MFD(i,k)  = ud_mf(i,k)/dt2
-            CLCN(i,k)     = cnvc(i,k)
+!           CLCN(i,k)     = cf_upi(i,k)
             CNV_FICE(i,k) = QICN(i,k)
      &                    / max(1.e-10,QLCN(i,k)+QICN(i,k))
           enddo

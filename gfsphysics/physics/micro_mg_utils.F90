@@ -168,14 +168,14 @@ real(r8), parameter, public :: rhoh = 400._r8
 ! droplets
 real(r8), parameter, public :: ac = 3.e7_r8
 real(r8), parameter, public :: bc = 2._r8
-! snow
+! snow from 11.72, 0.41
 real(r8), parameter, public :: as = 11.72_r8
 real(r8), parameter, public :: bs = 0.41_r8
 ! cloud ice
-! Anning from 700 to 500
-real(r8), parameter, public :: ai = 500._r8
-! Anning from 1 to 0.8
-real(r8), parameter, public :: bi = 1.2_r8
+! Anning from 700 to 
+real(r8), parameter, public :: ai = 700._r8
+! Anning from 1 to 
+real(r8), parameter, public :: bi = 1.0_r8
 ! small cloud ice (r< 10 um) - sphere, bulk density
 real(r8), parameter, public :: aj = ac*((rhoi/rhows)**(bc/3._r8))*rhows/rhow
 real(r8), parameter, public :: bj = bc

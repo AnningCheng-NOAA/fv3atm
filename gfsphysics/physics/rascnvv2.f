@@ -1034,12 +1034,12 @@
 !!            CNV_PRC3(ipt,ll) = PCU(l)/dt
 !             CNV_PRC3(ipt,ll) = zero
 !             if(PCU(l) < zero) write(*,*)"AAA777",PCU(l),ipt,ll
-              cf_upi(ipt,ll)   = max(zero,min(0.02*log(one+
-     &                             500*ud_mf(ipt,ll)/dt), cfmax))
+!             cf_upi(ipt,ll)   = max(zero,min(0.02*log(one+
+!    &                             500*ud_mf(ipt,ll)/dt), cfmax))
 !    &                             500*ud_mf(ipt,ll)/dt), 0.60))
 !     if (lprint) write(0,*)' ll=',ll,' cf_upi=',cf_upi(ipt,ll)
 !    &,' ud_mf=',ud_mf(ipt,ll),' dt=',dt,' cfmax=',cfmax
-              CLCN(ipt,ll)     = cf_upi(ipt,ll)  !downdraft is below updraft
+!             CLCN(ipt,ll)     = cf_upi(ipt,ll)  !downdraft is below updraft
               w_upi(ipt,ll)    = ud_mf(ipt,ll)*toi(l)*rgas /
      &                      (dt*max(cf_upi(ipt,ll),1.e-12)*prsl(ipt,ll))
             endif
@@ -1095,10 +1095,10 @@
 !!            CNV_PRC3(ipt,l) = PCU(l)/dt
 !             CNV_PRC3(ipt,l) = zero
 !             if(PCU(l) < zero) write(*,*)"AAA777",PCU(l),ipt,l
-              cf_upi(ipt,l)   = max(zero,min(0.02*log(one+
-     &                             500*ud_mf(ipt,l)/dt), cfmax))
+!             cf_upi(ipt,l)   = max(zero,min(0.02*log(one+
+!    &                             500*ud_mf(ipt,l)/dt), cfmax))
 !    &                             500*ud_mf(ipt,l)/dt), 0.60))
-              CLCN(ipt,l)     = cf_upi(ipt,l)  !downdraft is below updraft
+!             CLCN(ipt,l)     = cf_upi(ipt,l)  !downdraft is below updraft
               w_upi(ipt,l)    = ud_mf(ipt,l)*toi(l)*rgas /
      &                        (dt*max(cf_upi(ipt,l),1.e-12)*prsl(ipt,l))
             endif
