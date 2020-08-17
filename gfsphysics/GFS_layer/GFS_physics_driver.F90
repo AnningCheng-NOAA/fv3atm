@@ -471,7 +471,7 @@ module module_physics_driver
 
       integer :: i, kk, ic, itc, k, n, k1, iter, levshcm, tracers,      &
                  tottracer, nsamftrac, num2, num3, nshocm, nshoc, ntk,  &
-                 nn, nncl, ntiwx, seconds
+                 numtq, nn, nncl, ntiwx, seconds
 
       integer, dimension(size(Grid%xlon,1)) ::                          &
            kbot, ktop, kcnv, soiltyp, vegtype, kpbl, slopetyp, kinver,  &
@@ -542,7 +542,7 @@ module module_physics_driver
           smsoil, stsoil, slsoil
 
       real(kind=kind_phys), dimension(size(Grid%xlon,1),Model%levs) ::  &
-          del, rhc, dtdt, dudt, dvdt, dtdtc,                            &
+          del, rhc, dtdt, dudt, dvdt, dtdtc, dtvdtp,                    &
           ud_mf, dd_mf, dt_mf, prnum, dkt
 !         ud_mf, dd_mf, dt_mf, prnum, dkt, sigmatot, sigmafrac, txa
       real(kind=kind_phys), allocatable, dimension(:,:) :: sigmatot,    &
@@ -645,7 +645,7 @@ module module_physics_driver
 !  parameters for canopy heat storage parametrization
 !------------------------------------------------------
       real(kind=kind_phys), dimension(size(Grid%xlon,1))  :: &
-                                 hflxq, evapq, hffac, hefac
+                                 hflxq, evapq, hffac, hefac, zvfun
       real (kind=kind_phys), parameter :: z0min=0.2, z0max=1.0
       real (kind=kind_phys), parameter :: u10min=2.5, u10max=7.5
 !
@@ -884,6 +884,9 @@ module module_physics_driver
         !CCPP: num2 = Model%ncnvw
         !CCPP: num3 = Model%ncnvc
       endif
+!
+      numtq = Model%num_p3d + Model%npdf3d + Model%ncnvcld3d
+!
 !*## CCPP ##
 
 !## CCPP ##* GFS_surface_generic.F90/GFS_surface_generic_pre_run
@@ -1242,6 +1245,7 @@ module module_physics_driver
           dvdt(i,k)  = zero
           dtdt(i,k)  = zero
           dtdtc(i,k) = zero
+          dtvdtp(i,k) = zero
 
 !## CCPP ##* GFS_typedefs.F90/interstitial_phys_reset
 !vay-2018
@@ -2287,10 +2291,26 @@ module module_physics_driver
 !  --- ...  Boundary Layer and Free atmospheic turbulence parameterization
 !
 !  in order to achieve heat storage within canopy layer, in the canopy heat
-!    storage parameterization the kinematic sensible and latent heat fluxes
-!    (hflx & evap) as surface boundary forcings to the pbl scheme are
-!    reduced as a function of surface roughness
+!    storage parameterization the kinematic sensible heat flux
+!    (hflx) as surface boundary forcing to the pbl scheme is
+!    reduced as a function of surface roughness & green vegetation fraction
 !
+!    background diffusivity & background mixing length are also given by
+!     a function of surface roughness & green vegetation fraction
+! 
+      do i=1,im
+        if(islmsk(i) == 1) then
+          tem = 0.01 * Sfcprop%zorl(i)     ! change unit from cm to m
+          tem1 = (tem - z0min) / (z0max - z0min)
+          tem1 = min(max(tem1, 0.0), 1.0)
+          tem2 = max(sigmaf(i), 0.1)
+!         tem2 = sigmaf(i)
+          zvfun(i) = sqrt(tem1 * tem2)
+        else
+          zvfun(i) = 0.
+        endif
+      enddo
+
       do i=1,im
         hflxq(i) = hflx(i)
         evapq(i) = evap(i)
@@ -2299,17 +2319,18 @@ module module_physics_driver
       enddo
       if (Model%lheatstrg) then
         do i=1,im
-          tem = 0.01 * Sfcprop%zorl(i)     ! change unit from cm to m
-          tem1 = (tem - z0min) / (z0max - z0min)
-          hffac(i) = Model%z0fac * min(max(tem1, 0.0), 1.0)
-          tem = sqrt(Diag%u10m(i)**2+Diag%v10m(i)**2)
-          tem1 = (tem - u10min) / (u10max - u10min)
-          tem2 = 1.0 - min(max(tem1, 0.0), 1.0)
-          hffac(i) = tem2 * hffac(i)
-          hefac(i) = 1. + Model%e0fac * hffac(i)
-          hffac(i) = 1. + hffac(i)
-          hflxq(i) = hflx(i) / hffac(i)
-          evapq(i) = evap(i) / hefac(i)
+         if(islmsk(i) == 1) then
+          if(hflx(i) > 0.) then
+              hffac(i) = Model%h0facu * zvfun(i)
+            else
+              hffac(i) = Model%h0facs * zvfun(i)
+            endif
+            hffac(i) = 1. + hffac(i)
+            hflxq(i) = hflx(i) / hffac(i)
+            hefac(i) = 1. + 0.5 * hffac(i)
+            hffac(i) = 1. + hffac(i)
+            evapq(i) = evap(i) / hefac(i)
+          end if
         enddo
       endif
 !
@@ -2387,7 +2408,7 @@ module module_physics_driver
                 call satmedmfvdifq(ix, im, levs, nvdiff, ntcw, ntiw, ntke,          &
                        dvdt, dudt, dtdt, dqdt,                                      &
                        Statein%ugrs, Statein%vgrs, Statein%tgrs, Statein%qgrs,      &
-                       Radtend%htrsw, Radtend%htrlw, xmu, garea,                    &
+                       Radtend%htrsw, Radtend%htrlw, xmu, garea,zvfun,              &
                        Statein%prsik(1,1), rb, Sfcprop%zorl, Diag%u10m, Diag%v10m,  &
                        Sfcprop%ffmm, Sfcprop%ffhh, Sfcprop%tsfc, hflxq, evapq,      &
                        stress, wind, kpbl, Statein%prsi, del, Statein%prsl,         &
@@ -2640,7 +2661,7 @@ module module_physics_driver
                 call satmedmfvdifq(ix, im, levs, nvdiff, ntcw, ntiwx, ntkev,          &
                          dvdt, dudt, dtdt, dvdftra,                                   &
                          Statein%ugrs, Statein%vgrs, Statein%tgrs, vdftra,            &
-                         Radtend%htrsw, Radtend%htrlw, xmu, garea,                    &
+                         Radtend%htrsw, Radtend%htrlw, xmu, garea, zvfun,                     &
                          Statein%prsik(1,1), rb, Sfcprop%zorl, Diag%u10m, Diag%v10m,  &
                          Sfcprop%ffmm, Sfcprop%ffhh, Sfcprop%tsfc, hflxq, evapq,      &
                          stress, wind, kpbl, Statein%prsi, del, Statein%prsl,         &
@@ -3696,6 +3717,39 @@ module module_physics_driver
 !
 !*## CCPP ##
       endif   ! if(do_shoc)
+!
+!   save temperature and moisture fields at two time steps back & & previous
+!   time step in 'phy_f3d' array
+!   for Zhao/Carr/Sundqvist Microphysics scheme, they are saved in
+!   'phy_f3d(:,:,1~4)'
+!   Calculate and the virtual temperature variable tendency for the pbl forcing
+!   in 'samfdeepcnv' & 'samfshalcnv' convection schemes.
+!
+      if (Model%deep_pblf) then
+!
+      if (imp_physics == 99 .or. imp_physics == 98) then   ! zhao-carr microphysics
+        do k=1,levs/2
+          do i=1,im
+            tem = max(Tbd%phy_f3d(i,k,2), 1.e-8)
+            tem1 = Tbd%phy_f3d(i,k,1) * (one + con_fvirt * tem)
+            tem = max(Stateout%gq0(i,k,1), 1.e-8)
+            tem2 = Stateout%gt0(i,k) * (one + con_fvirt * tem)
+            dtvdtp(i,k) = (tem2 - tem1) / dtp
+          enddo
+        enddo
+      else
+        do k=1,levs/2
+          do i=1,im
+            tem = max(Tbd%phy_f3d(i,k,numtq+2), 1.e-8)
+            tem1 = Tbd%phy_f3d(i,k,numtq+1) * (one + con_fvirt * tem)
+            tem = max(Stateout%gq0(i,k,1), 1.e-8)
+            tem2 = Stateout%gt0(i,k) * (one + con_fvirt * tem)
+            dtvdtp(i,k) = (tem2 - tem1) / dtp
+          enddo
+        enddo
+      endif
+!
+      endif
 
 !
 !  --- ...  calling convective parameterization
@@ -3736,6 +3790,7 @@ module module_physics_driver
 !## CCPP ##* samfdeepcnv.f/samfdeepcnv_run
             call samfdeepcnv(im, ix, levs, dtp, itc, Model%ntchm, ntk, nsamftrac,  &
                              del, Statein%prsl, Statein%pgr, Statein%phil, clw,    &
+                             Model%deep_pblf, dtvdtp,                              & 
                              Stateout%gq0(:,:,1), Stateout%gt0,                    &
                              Stateout%gu0, Stateout%gv0, Model%fscav,              &
                              cld1d, rain1, kbot, ktop, kcnv,                       &
@@ -5549,6 +5604,38 @@ module module_physics_driver
 !--- radiation heating rate
         Tbd%dtdtr(1:im,:) = Tbd%dtdtr(1:im,:) + dtdtc(1:im,:)*dtf
       endif
+!
+!   save temperature and moisture fields at two time steps back & & previous
+!   time step in 'phy_f3d' array
+!   for Zhao/Carr/Sundqvist Microphysics scheme, they are saved in
+!   'phy_f3d(:,:,1~4)'
+!
+      if (Model%deep_pblf) then
+!
+      if (imp_physics /= 99 .or. imp_physics /= 98) then   ! not zhao-carr microphysics
+         if (dtp > dtf+0.001) then  ! three time level scheme
+           do k = 1, levs
+             do i = 1, im
+               Tbd%phy_f3d(i,k,numtq+1) = Tbd%phy_f3d(i,k,numtq+3)
+               Tbd%phy_f3d(i,k,numtq+2) = Tbd%phy_f3d(i,k,numtq+4)
+               Tbd%phy_f3d(i,k,numtq+3) = Stateout%gt0(i,k)
+               Tbd%phy_f3d(i,k,numtq+4) = Stateout%gq0(i,k,1)
+             enddo
+           enddo
+         else  ! two time level scheme - Tbd%phy_f3d(i,k,numtq+3) & Tbd%phy_f3d(i,k,numtq+4) not used
+           do k = 1, levs
+             do i = 1, im
+               Tbd%phy_f3d(i,k,numtq+1) = Stateout%gt0(i,k)
+               Tbd%phy_f3d(i,k,numtq+2) = Stateout%gq0(i,k,1)
+               Tbd%phy_f3d(i,k,numtq+3) = Stateout%gt0(i,k)
+               Tbd%phy_f3d(i,k,numtq+4) = Stateout%gq0(i,k,1)
+             enddo
+           enddo
+         endif
+      endif
+!
+      endif
+
 !*## CCPP ##
 !## CCPP ##* This block is not in the CCPP since it is not needed in the CCPP.
                             deallocate (clw)

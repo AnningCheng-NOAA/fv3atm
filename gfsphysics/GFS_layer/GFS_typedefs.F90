@@ -826,6 +826,7 @@ module GFS_typedefs
     logical              :: random_clds     !< flag controls whether clouds are random
     logical              :: shal_cnv        !< flag for calling shallow convection
     logical              :: do_deep         !< whether to do deep convection
+    logical              :: deep_pblf       !< flag for having PBL forcing in deep cumulus convection
     integer              :: imfshalcnv      !< flag for mass-flux shallow convection scheme
                                             !<     1: July 2010 version of mass-flux shallow conv scheme
                                             !<         current operational version as of 2016
@@ -979,10 +980,9 @@ module GFS_typedefs
     real(kind=kind_phys) :: bl_dnfr         !< downdraft fraction in boundary layer mass flux scheme
 
 !--- parameters for canopy heat storage (CHS) parameterization
-    real(kind=kind_phys) :: z0fac           !< surface roughness fraction factor
-    real(kind=kind_phys) :: e0fac           !< latent heat flux fraction factor relative to sensible heat flux
-                                            !< e.g., e0fac=0.5 indicates that CHS for latent heat flux is 50% of that for
-                                            !< sensible heat flux
+    real(kind=kind_phys) :: h0facu          !< CHS factor for sensible heat flux in unstable surface layer
+    real(kind=kind_phys) :: h0facs          !< CHS factor for sensible heat flux in stable surface layer
+
 
 !---cellular automata control parameters
     integer              :: nca             !< number of independent cellular automata
@@ -1069,6 +1069,10 @@ module GFS_typedefs
     integer              :: nreffr          !< the index of rain effective radius in phy_f3d
     integer              :: nseffr          !< the index of snow effective radius in phy_f3d
     integer              :: ngeffr          !< the index of graupel effective radius in phy_f3d
+!
+    integer              :: ntpqp3d         !< number of 3d fields of temperature & moisture
+!
+
 #ifdef CCPP
     integer              :: nkbfshoc        !< the index of upward kinematic buoyancy flux from SHOC in phy_f3d
     integer              :: nahdshoc        !< the index of diffusivity for heat from from SHOC in phy_f3d
@@ -1884,6 +1888,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: tprcp_ocean(:)     => null()  !<
     integer                             :: tracers_start_index           !<
     integer                             :: tracers_total                 !<
+    integer                             :: numtq                         !<
     integer                             :: tracers_water                 !<
     logical                             :: trans_aero                    !<
     real (kind=kind_phys), pointer      :: trans(:)           => null()  !<
@@ -3056,6 +3061,7 @@ module GFS_typedefs
                                                                       !<     0: initial version of satmedmf (Nov. 2018)
                                                                       !<     1: updated version of satmedmf (as of May 2019)
     logical              :: do_deep        = .true.                   !< whether to do deep convection
+    logical              :: deep_pblf      = .false.                  !< flag for having PBL forcing in deep cumulus conv
 #ifdef CCPP
     logical              :: do_mynnedmf       = .false.               !< flag for MYNN-EDMF
     logical              :: do_mynnsfclay     = .false.               !< flag for MYNN Surface Layer Scheme
@@ -3177,8 +3183,9 @@ module GFS_typedefs
     real(kind=kind_phys) :: bl_dnfr        = 0.1             !< downdraft fraction in boundary layer mass flux scheme
 
 !--- parameters for canopy heat storage (CHS) parameterization
-    real(kind=kind_phys) :: z0fac          = 0.3
-    real(kind=kind_phys) :: e0fac          = 0.5
+    real(kind=kind_phys) :: h0facu         = 0.25
+!   real(kind=kind_phys) :: h0facs         = 0.75
+    real(kind=kind_phys) :: h0facs         = 1.0
 
  
 !---Cellular automaton options
@@ -3297,7 +3304,7 @@ module GFS_typedefs
                                h2o_phys, pdfcld, shcnvcw, redrag, hybedmf, satmedmf,        &
                                shinhong, do_ysu, dspheat, lheatstrg, cnvcld,                &
                                random_clds, shal_cnv, imfshalcnv, imfdeepcnv, isatmedmf,    &
-                               do_deep, jcap,                                               &
+                               do_deep, deep_pblf, jcap,                                    &
                                cs_parm, flgmin, cgwf, ccwf, cdmbgwd, sup, ctei_rm, crtrh,   &
                                dlqf, rbcr, shoc_parm, psauras, prauras, wminras,            &
                                do_sppt, do_shum, do_skeb, do_sfcperts,                      &
@@ -3323,7 +3330,8 @@ module GFS_typedefs
                                xkzm_m, xkzm_h, xkzm_s, xkzminv, moninq_fac, dspfac,         &
                                bl_upfr, bl_dnfr,                                            &
                           !--- canopy heat storage parameterization
-                               z0fac, e0fac,                                                &
+                               h0facu, h0facs,                                              &
+
                           !--- cellular automata
                                nca, ncells, nlives, nca_g, ncells_g, nlives_g, nfracseed,   &
                                nseed, nseed_g, nthresh, do_ca,                              &
@@ -3351,6 +3359,8 @@ module GFS_typedefs
 !--- convective clouds
     integer :: ncnvcld3d = 0       !< number of convective 3d clouds fields
 
+!--- temperature & moisture
+    integer :: ntpqp3d = 0         !< 3d fields of temperature & moisture
 
 !--- read in the namelist
 #ifdef INTERNAL_FILE_NML
@@ -3705,6 +3715,7 @@ module GFS_typedefs
     Model%imfdeepcnv        = imfdeepcnv
     Model%isatmedmf         = isatmedmf
     Model%do_deep           = do_deep
+    Model%deep_pblf         = deep_pblf
     Model%nmtvr             = nmtvr
     Model%jcap              = jcap
     Model%flgmin            = flgmin
@@ -3798,10 +3809,9 @@ module GFS_typedefs
     Model%dspfac           = dspfac
     Model%bl_upfr          = bl_upfr
     Model%bl_dnfr          = bl_dnfr
-
 !--- canopy heat storage parametrization
-    Model%z0fac            = z0fac
-    Model%e0fac            = e0fac
+    Model%h0facu           = h0facu
+    Model%h0facs           = h0facs
 
 !--- stochastic physics options
     ! do_sppt, do_shum, do_skeb and do_sfcperts are namelist variables in group
@@ -3973,6 +3983,7 @@ module GFS_typedefs
     Model%nshoc_2d         = nshoc_2d
     Model%nshoc_3d         = nshoc_3d
     Model%ncnvcld3d        = ncnvcld3d
+    Model%ntpqp3d          = ntpqp3d
     Model%nctp             = nctp
 
 !--- set initial values for time varying properties
@@ -4471,10 +4482,21 @@ module GFS_typedefs
     elseif ((Model%npdf3d == 0) .and. (Model%ncnvcld3d == 1)) then
       Model%ncnvw = Model%num_p3d + 1
     endif
- 
+
+!--- get temperature and moisture fields at two time steps back
+!      & previous time step in phy_f3d
+!   for Zhao/Carr/Sundqvist Microphysics scheme, they are assigned in
+!     phy_f3d(:,:,1~4)
+
+    if (Model%deep_pblf .and.                                      &
+      (Model%imp_physics /= 99 .or. Model%imp_physics /= 98)) then
+        Model%ntpqp3d = 4
+    endif
+
 !--- derived totals for phy_f*d
     Model%ntot2d = Model%num_p2d + Model%nshoc_2d
     Model%ntot3d = Model%num_p3d + Model%nshoc_3d + Model%npdf3d + Model%ncnvcld3d
+    Model%ntot3d = Model%ntot3d + Model%ntpqp3d + Model%nshoc_3d
 !
 !   Unified cloud for SHOC and/or MG3
     Model%uni_cld = .false.
@@ -4843,10 +4865,9 @@ module GFS_typedefs
       print *, ' dspfac            : ', Model%dspfac
       print *, ' bl_upfr           : ', Model%bl_upfr
       print *, ' bl_dnfr           : ', Model%bl_dnfr
-      print *, ' '
       print *, 'parameters for canopy heat storage parametrization'
-      print *, ' z0fac             : ', Model%z0fac
-      print *, ' e0fac             : ', Model%e0fac
+      print *, ' h0facu            : ', Model%h0facu
+      print *, ' h0facs            : ', Model%h0facs
       print *, ' '
       print *, 'stochastic physics'
       print *, ' do_sppt           : ', Model%do_sppt
@@ -4914,6 +4935,7 @@ module GFS_typedefs
       print *, ' nshoc_3d          : ', Model%nshoc_3d
       print *, ' ncnvcld3d         : ', Model%ncnvcld3d
       print *, ' npdf3d            : ', Model%npdf3d
+      print *, ' ntpqp3d           : ', Model%ntpqp3d
       print *, ' nctp              : ', Model%nctp
 #ifdef CCPP
       print *, ' nkbfshoc          : ', Model%nkbfshoc
@@ -6451,6 +6473,7 @@ module GFS_typedefs
        Interstitial%nsamftrac = Interstitial%tracers_total
     endif
     Interstitial%ncstrac = Interstitial%tracers_total + 3
+    Interstitial%numtq = Model%num_p3d + Model%npdf3d + Model%ncnvcld3d
 
   end subroutine interstitial_setup_tracers
 

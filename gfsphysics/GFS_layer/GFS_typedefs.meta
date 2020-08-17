@@ -8091,6 +8091,12 @@
   units = count
   dimensions = ()
   type = integer
+[numtq]
+  standard_name = time_levels_of_phy_f3d_for_PBL_forcing
+  long_name = time levels of phy_f3d for PBL forcing
+  units = count
+  dimensions = ()
+  type = integer
 [trans_aero]
   standard_name = flag_for_aerosol_convective_transport_and_PBL_diffusion
   long_name = flag for aerosol convective transport and PBL diffusion

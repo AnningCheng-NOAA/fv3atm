@@ -19,7 +19,8 @@
 !
 !----------------------------------------------------------------------
       subroutine satmedmfvdifq(ix,im,km,ntrac,ntcw,ntiw,ntke,
-     &     dv,du,tdt,rtg,u1,v1,t1,q1,swh,hlw,xmu,garea,
+     &     dv,du,tdt,rtg,u1,v1,t1,q1,
+     &     swh,hlw,xmu,garea,zvfun,
      &     psk,rbsoil,zorl,u10m,v10m,fm,fh,
      &     tsea,heat,evap,stress,spd1,kpbl,
      &     prsi,del,prsl,prslk,phii,phil,delt,
@@ -47,6 +48,7 @@
      &                     t1(ix,km),     q1(ix,km,ntrac),
      &                     swh(ix,km),    hlw(ix,km),
      &                     xmu(im),       garea(im),
+     &                     zvfun(im),
      &                     psk(ix),       rbsoil(im),
      &                     zorl(im),      tsea(im),
      &                     u10m(im),      v10m(im),
@@ -97,14 +99,15 @@
       real(kind=kind_phys) radmin(im)
 !
       real(kind=kind_phys) zi(im,km+1),  zl(im,km),   zm(im,km),
-     &                     xkzo(im,km-1),xkzmo(im,km-1),
-     &                     xkzm_hx(im),  xkzm_mx(im), tkmnz(im,km-1),
+     &                     xkzo(im,km),  xkzmo(im,km),
+     &                     xkzm_hx(im),  xkzm_mx(im),
+     &                     ri(im,km-1),  tkmnz(im,km-1),
      &                     rdzt(im,km-1),rlmnz(im,km),
      &                     al(im,km-1),  ad(im,km),   au(im,km-1),
      &                     f1(im,km),    f2(im,km*(ntrac-1))
 !
       real(kind=kind_phys) elm(im,km),   ele(im,km),
-     &                     ckz(im,km),   chz(im,km),  frik(im),
+     &                     ckz(im,km),   chz(im,km),
      &                     diss(im,km-1),prod(im,km-1), 
      &                     bf(im,km-1),  shr2(im,km-1),
      &                     xlamue(im,km-1), xlamde(im,km-1),
@@ -138,7 +141,7 @@
      &                     gocp,    gravi,  zol1,   zolcru,
      &                     buop,    shrp,   dtn,
      &                     prnum,   prmax,  prmin,  prtke,
-     &                     prscu,   pr0,    ri,
+     &                     prscu,   pr0,
      &                     dw2,     dw2min, zk,     
      &                     elmfac,  elefac, dspmax,
      &                     alp,     clwt,   cql,
@@ -152,14 +155,14 @@
      &                     rlmx,    elmx,
      &                     ttend,   utend,  vtend,  qtend,
      &                     zfac,    zfmin,  vk,     spdk2,
-     &                     tkmin,   tkminx, xkzinv, xkgdx,
-     &                     zlup,    zldn,   bsum,
-     &                     tem,     tem1,   tem2,
+     &                     tkmin,   tkminx, xkgdx,  xkinv,
+     &                     zlup,    zldn,   bsum,   cs0,
+     &                     tem,     tem1,   tem2,   tem3,
      &                     ptem,    ptem0,  ptem1,  ptem2
 !
       real(kind=kind_phys) ck0, ck1, ch0, ch1, ce0, rchck
 !
-      real(kind=kind_phys) qlcr, zstblmax
+      real(kind=kind_phys) qlcr, zstblmax, hcrinv
 !
       real(kind=kind_phys) h1 
 !!
@@ -169,11 +172,11 @@
       parameter(cont=cp/g,conq=hvap/g,conw=1.0/g)  ! for del in pa
 !     parameter(cont=1000.*cp/g,conq=1000.*hvap/g,conw=1000./g) !kpa
       parameter(elocp=hvap/cp,el2orc=hvap*hvap/(rv*cp))
-      parameter(wfac=7.0,cfac=3.0)
+      parameter(wfac=7.0,cfac=4.5)
       parameter(gamcrt=3.,gamcrq=0.,sfcfrac=0.1)
       parameter(vk=0.4,rimin=-100.)
       parameter(rbcr=0.25,zolcru=-0.02,tdzmin=1.e-3)
-      parameter(rlmn=30.,rlmn1=5.,rlmn2=15.)
+      parameter(rlmn=30.,rlmn1=5.,rlmn2=10.)
       parameter(rlmx=300.,elmx=300.)
       parameter(prmin=0.25,prmax=4.0)
       parameter(pr0=1.0,prtke=1.0,prscu=0.67)
@@ -183,10 +186,12 @@
       parameter(aphi5=5.,aphi16=16.)
       parameter(elmfac=1.0,elefac=1.0,cql=100.)
       parameter(dw2min=1.e-4,dkmax=1000.,xkgdx=5000.)
-      parameter(qlcr=3.5e-5,zstblmax=2500.,xkzinv=0.15)
-      parameter(h1=0.33333333)
+      parameter(qlcr=3.5e-5,zstblmax=2500.)
+      parameter(xkinv=0.3)
+      parameter(h1=0.33333333,hcrinv=250.)
       parameter(ck0=0.4,ck1=0.15,ch0=0.4,ch1=0.15)
-      parameter(ce0=0.4)
+!     parameter(ce0=0.4,cs0=0.5)
+      parameter(ce0=0.4,cs0=0.2)
       parameter(rchck=1.5,ndt=20)
 !
 !************************************************************************
@@ -213,9 +218,6 @@
           chz(i,k) = ch1
           rlmnz(i,k) = rlmn
         enddo
-      enddo
-      do i=1,im
-        frik(i) = 1.0
       enddo
       do i=1,im
         zi(i,km+1) = phii(i,km+1) * gravi
@@ -252,7 +254,7 @@
 !  horizontal grid size with xkzm_h & xkzm_m for gdx >= 25km
 !  and 0.01 for gdx=5m, i.e.,
 !  xkzm_hx = 0.01 + (xkzm_h - 0.01)/(xkgdx-5.) * (gdx-5.)
-!  xkzm_mx = 0.01 + (xkzm_h - 0.01)/(xkgdx-5.) * (gdx-5.)
+!  xkzm_mx = 0.01 + (xkzm_m - 0.01)/(xkgdx-5.) * (gdx-5.)
 !
       do i=1,im
         kx1(i) = 1
@@ -270,7 +272,7 @@
           xkzm_mx(i) = 0.01 + tem2 * ptem
         endif
       enddo
-      do k = 1,km1
+      do k = 1,km
         do i=1,im
           xkzo(i,k)  = 0.0
           xkzmo(i,k) = 0.0
@@ -283,8 +285,6 @@
             rlmnz(i,k)= rlmn * tem2
             rlmnz(i,k)= max(rlmnz(i,k), rlmn1)
 !                               vertical background diffusivity
-            ptem      = prsi(i,k+1) * tx1(i)
-            tem1      = 1.0 - ptem
             tem2      = tem1 * tem1 * 10.0
             tem2      = min(1.0, exp(-tem2))
             xkzo(i,k) = xkzm_hx(i) * tem2
@@ -294,7 +294,7 @@
               kx1(i)     = k + 1
             else
               if (k == kx1(i) .and. k > 1) tx2(i) = 1.0 / prsi(i,k)
-              tem1 = 1.0 - prsi(i,k+1) * tx2(i)
+              tem1 = 1.0 - prsl(i,k+1) * tx2(i)
               tem1 = tem1 * tem1 * 5.0
               xkzmo(i,k) = xkzm_mx(i) * min(1.0, exp(-tem1))
             endif
@@ -457,6 +457,7 @@
          dw2  = (u1(i,k)-u1(i,k+1))**2
      &        + (v1(i,k)-v1(i,k+1))**2
          shr2(i,k) = max(dw2,dw2min)*rdz*rdz
+         ri(i,k) = max(bf(i,k)/shr2(i,k),rimin)
       enddo
       enddo
 !
@@ -546,8 +547,52 @@
            hgamq(i) = evap(i)/wscale(i)
            vpert(i) = hgamt(i) + hgamq(i)*fv*theta(i,1)
            vpert(i) = max(vpert(i),0.)
-           vpert(i) = min(cfac*vpert(i),gamcrt)
+           tem = min(cfac*vpert(i),gamcrt)
+           thermal(i)= thermal(i) + tem
          endif
+      enddo
+!
+!  enhance the pbl height by considering the thermal excess
+!     (overshoot pbl top)
+!
+      do i=1,im
+         flg(i)  = .true.
+         if(pcnvflg(i)) then
+           flg(i)  = .false.
+           rbup(i) = rbsoil(i)
+         endif
+      enddo
+      do k = 2, kmpbl
+      do i = 1, im
+        if(.not.flg(i)) then
+          rbdn(i) = rbup(i)
+          spdk2   = max((u1(i,k)**2+v1(i,k)**2),1.)
+          rbup(i) = (thlvx(i,k)-thermal(i))*
+     &              (g*zl(i,k)/thlvx(i,1))/spdk2
+          kpbl(i) = k
+          flg(i)  = rbup(i) > crb(i)
+        endif
+      enddo
+      enddo
+      do i = 1,im
+        if(pcnvflg(i)) then
+           k = kpbl(i)
+           if(rbdn(i) >= crb(i)) then
+             rbint = 0.
+           elseif(rbup(i) <= crb(i)) then
+             rbint = 1.
+           else
+             rbint = (crb(i)-rbdn(i))/(rbup(i)-rbdn(i))
+           endif
+           hpbl(i) = zl(i,k-1) + rbint*(zl(i,k)-zl(i,k-1))
+           if(hpbl(i) < zi(i,kpbl(i))) then
+             kpbl(i) = kpbl(i) - 1
+           endif
+           if(kpbl(i) <= 1) then
+              pcnvflg(i) = .false.
+              pblflg(i) = .false.
+           endif
+        endif
       enddo
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -674,35 +719,31 @@
         enddo
       enddo
 !
-!  background diffusivity decreasing with increasing surface layer stability
+! Above a threshold height (hcrinv), the background vertical diffusivities & mixing length 
+!    in the inversion layers are set to much smaller values (xkinv & rlmn2)
 !
-!     do i = 1, im
-!       if(.not.sfcflg(i)) then
-!         tem = (1. + 5. * rbsoil(i))**2.
-!!        tem = (1. + 5. * zol(i))**2.
-!         frik(i) = 0.1 + 0.9 / tem
-!       endif
-!     enddo
-!
-!     do k = 1,km1
-!       do i=1,im
-!         xkzo(i,k) = frik(i) * xkzo(i,k)
-!         xkzmo(i,k)= frik(i) * xkzmo(i,k)
-!       enddo
-!     enddo
-!
-! The background vertical diffusivities in the inversion layers are limited 
-!    to be less than or equal to xkzminv
+! Below the threshold height (hcrinv), the background vertical diffusivities & mixing length 
+!    in the inversion layers are increased with increasing roughness length & vegetation fraction
 !
       do k = 1,km1
         do i=1,im
-!         tem1 = (tvx(i,k+1)-tvx(i,k)) * rdzt(i,k)
-!         if(tem1 > 1.e-5) then
-          tem1 = tvx(i,k+1)-tvx(i,k)
-          if(tem1 > 0.) then
-             xkzo(i,k)  = min(xkzo(i,k), xkzinv)
-             xkzmo(i,k) = min(xkzmo(i,k), xkzinv)
-             rlmnz(i,k) = min(rlmnz(i,k), rlmn2)
+          if(zi(i,k+1) > hcrinv) then
+            tem1 = tvx(i,k+1)-tvx(i,k)
+            if(tem1 >= 0.) then
+              xkzo(i,k)  = min(xkzo(i,k), xkinv)
+              xkzmo(i,k) = min(xkzmo(i,k), xkinv)
+              rlmnz(i,k) = min(rlmnz(i,k), rlmn2)
+            endif
+          else
+            tem1 = tvx(i,k+1)-tvx(i,k)
+            if(tem1 > 0.) then
+              ptem = xkzo(i,k) * zvfun(i)
+              xkzo(i,k) = min(max(ptem, xkinv), xkzo(i,k))
+              ptem = xkzmo(i,k) * zvfun(i)
+              xkzmo(i,k) = min(max(ptem, xkinv), xkzmo(i,k))
+              ptem = rlmnz(i,k) * zvfun(i)
+              rlmnz(i,k) = min(max(ptem, rlmn2), rlmnz(i,k))
+            endif
           endif
         enddo
       enddo
@@ -718,8 +759,15 @@
           do n = k, km1
             if(mlenflg) then
               dz = zl(i,n+1) - zl(i,n)
-              ptem = gotvx(i,n)*(thvx(i,n+1)-thvx(i,k))*dz
-!             ptem = gotvx(i,n)*(thlvx(i,n+1)-thlvx(i,k))*dz
+!             tem1 = 0.5 * (thvx(i,n) + thvx(i,n+1))
+!!            tem1 = 0.5 * (thlvx(i,n) + thlvx(i,n+1))
+              tem3=((u1(i,n+1)-u1(i,n))/dz)**2
+              tem3=tem3+((v1(i,n+1)-v1(i,n))/dz)**2
+              tem3=cs0*sqrt(tem3)*sqrt(tke(i,k))
+              ptem = (gotvx(i,n)*(thvx(i,n+1)-thvx(i,k))+tem3)*dz
+!             ptem = (gotvx(i,n)*(thlvx(i,n+1)-thlvx(i,k)+tem3)*dz
+!             ptem = (gotvx(i,n)*(tem1-thvx(i,k))+tem3)*dz
+!!            ptem = (gotvx(i,n)*(tem1-thlvx(i,k)+tem3)*dz
               bsum = bsum + ptem
               zlup = zlup + dz
               if(bsum >= tke(i,k)) then
@@ -743,13 +791,23 @@
               if(n == 1) then
                 dz = zl(i,1)
                 tem1 = tsea(i)*(1.+fv*max(q1(i,1,1),qmin))
+!               tem1 = 0.5 * (tem1 + thvx(i,n))
+!!              tem1 = 0.5 * (tem1 + thlvx(i,n))
+                tem3 = (u1(i,1)/dz)**2
+                tem3 = tem3+(v1(i,1)/dz)**2
+                tem3 = cs0*sqrt(tem3)*sqrt(tke(i,1))
               else
                 dz = zl(i,n) - zl(i,n-1)
                 tem1 = thvx(i,n-1)
 !               tem1 = thlvx(i,n-1)
+!               tem1 = 0.5 * (thvx(i,n-1) + thvx(i,n))
+!!              tem1 = 0.5 * (thlvx(i,n-1) + thlvx(i,n))
+                tem3 = ((u1(i,n)-u1(i,n-1))/dz)**2
+                tem3 = tem3+((v1(i,n)-v1(i,n-1))/dz)**2
+                tem3 = cs0*sqrt(tem3)*sqrt(tke(i,k))
               endif
-              ptem = gotvx(i,n)*(thvx(i,k)-tem1)*dz
-!             ptem = gotvx(i,n)*(thlvx(i,k)-tem1)*dz
+              ptem = (gotvx(i,n)*(thvx(i,k)-tem1)+tem3)*dz
+!             ptem = (gotvx(i,n)*(thlvx(i,k)-tem1)+tem3)*dz
               bsum = bsum + ptem
               zldn = zldn + dz
               if(bsum >= tke(i,k)) then
@@ -815,15 +873,20 @@
 !
       do k = 1, km1
         do i = 1, im
+           xkzo(i,k) = 0.5 * (xkzo(i,k) + xkzo(i,k+1))
+           xkzmo(i,k) = 0.5 * (xkzmo(i,k) + xkzmo(i,k+1))
+        enddo
+      enddo
+      do k = 1, km1
+        do i = 1, im
            tem = 0.5 * (elm(i,k) + elm(i,k+1))
            tem = tem * sqrt(tkeh(i,k))
-           ri = max(bf(i,k)/shr2(i,k),rimin)
            if(k < kpbl(i)) then
              if(pcnvflg(i)) then
                dku(i,k) = ckz(i,k) * tem
                dkt(i,k) = dku(i,k) / prn(i,k)
              else
-               if(ri < 0.) then ! unstable regime
+               if(ri(i,k) < 0.) then ! unstable regime
                  dku(i,k) = ckz(i,k) * tem
                  dkt(i,k) = dku(i,k) / prn(i,k)
                else             ! stable regime
@@ -832,12 +895,12 @@
                endif
              endif
            else
-              if(ri < 0.) then ! unstable regime
+              if(ri(i,k) < 0.) then ! unstable regime
                 dku(i,k) = ck1 * tem
                 dkt(i,k) = rchck * dku(i,k)
               else             ! stable regime
                 dkt(i,k) = ch1 * tem
-                prnum = 1.0 + 2.1 * ri
+                prnum = 1.0 + 2.1 * ri(i,k)
                 prnum = min(prnum,prmax)
                 dku(i,k) = dkt(i,k) * prnum
               endif
