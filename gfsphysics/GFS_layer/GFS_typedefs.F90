@@ -1689,6 +1689,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: drain(:)           => null()  !<
     real (kind=kind_phys), pointer      :: dtdt(:,:)          => null()  !<
     real (kind=kind_phys), pointer      :: dtdtc(:,:)         => null()  !<
+    real (kind=kind_phys), pointer      :: dtvdtp(:,:)        => null()  !<
     real (kind=kind_phys), pointer      :: dtsfc1(:)          => null()  !<
     real (kind=kind_phys), pointer      :: dtzm(:)            => null()  !<
     real (kind=kind_phys), pointer      :: dt_mf(:,:)         => null()  !<
@@ -1754,6 +1755,7 @@ module GFS_typedefs
     real (kind=kind_phys), pointer      :: h2o_pres(:)        => null()  !<
     real (kind=kind_phys), pointer      :: hefac(:)           => null()  !<
     real (kind=kind_phys), pointer      :: hffac(:)           => null()  !<
+    real (kind=kind_phys), pointer      :: zvfun(:)           => null()  !<
     real (kind=kind_phys), pointer      :: hflx(:)            => null()  !<
     real (kind=kind_phys), pointer      :: hflxq(:)           => null()  !<
     real (kind=kind_phys), pointer      :: hflx_ice(:)        => null()  !<
@@ -5994,6 +5996,7 @@ module GFS_typedefs
     allocate (Interstitial%drain           (IM))
     allocate (Interstitial%dtdt            (IM,Model%levs))
     allocate (Interstitial%dtdtc           (IM,Model%levs))
+    allocate (Interstitial%dtvdtp          (IM,Model%levs))
     allocate (Interstitial%dtsfc1          (IM))
     allocate (Interstitial%dt_mf           (IM,Model%levs))
     allocate (Interstitial%dtzm            (IM))
@@ -6056,6 +6059,7 @@ module GFS_typedefs
     allocate (Interstitial%h2o_pres        (levh2o))
     allocate (Interstitial%hefac           (IM))
     allocate (Interstitial%hffac           (IM))
+    allocate (Interstitial%zvfun           (IM))
     allocate (Interstitial%hflx            (IM))
     allocate (Interstitial%hflxq           (IM))
     allocate (Interstitial%hflx_ice        (IM))
@@ -6641,6 +6645,7 @@ module GFS_typedefs
     Interstitial%dt_mf           = clear_val
     Interstitial%dtdt            = clear_val
     Interstitial%dtdtc           = clear_val
+    Interstitial%dtvdtp          = clear_val
     Interstitial%dtsfc1          = clear_val
     Interstitial%dtzm            = clear_val
     Interstitial%dudt            = clear_val
@@ -6697,6 +6702,7 @@ module GFS_typedefs
     Interstitial%gwdcv           = clear_val
     Interstitial%hefac           = clear_val
     Interstitial%hffac           = clear_val
+    Interstitial%zvfun           = clear_val
     Interstitial%hflx            = clear_val
     Interstitial%hflxq           = clear_val
     Interstitial%hflx_ice        = huge
@@ -6954,6 +6960,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%drain           ) = ', sum(Interstitial%drain           )
     write (0,*) 'sum(Interstitial%dtdt            ) = ', sum(Interstitial%dtdt            )
     write (0,*) 'sum(Interstitial%dtdtc           ) = ', sum(Interstitial%dtdtc           )
+    write (0,*) 'sum(Interstitial%dtvdtp          ) = ', sum(Interstitial%dtvdtp          )
     write (0,*) 'sum(Interstitial%dtsfc1          ) = ', sum(Interstitial%dtsfc1          )
     write (0,*) 'sum(Interstitial%dtzm            ) = ', sum(Interstitial%dtzm            )
     write (0,*) 'sum(Interstitial%dt_mf           ) = ', sum(Interstitial%dt_mf           )
@@ -7016,6 +7023,7 @@ module GFS_typedefs
     write (0,*) 'sum(Interstitial%gwdcv           ) = ', sum(Interstitial%gwdcv           )
     write (0,*) 'sum(Interstitial%hefac           ) = ', sum(Interstitial%hefac           )
     write (0,*) 'sum(Interstitial%hffac           ) = ', sum(Interstitial%hffac           )
+    write (0,*) 'sum(Interstitial%zvfun           ) = ', sum(Interstitial%zvfun           )
     write (0,*) 'sum(Interstitial%hflx            ) = ', sum(Interstitial%hflx            )
     write (0,*) 'sum(Interstitial%hflxq           ) = ', sum(Interstitial%hflxq           )
     write (0,*) 'sum(Interstitial%hflx_ice        ) = ', sum(Interstitial%hflx_ice        )
