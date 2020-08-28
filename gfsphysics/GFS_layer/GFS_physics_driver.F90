@@ -3794,8 +3794,8 @@ module module_physics_driver
                              Stateout%gq0(:,:,1), Stateout%gt0,                    &
                              Stateout%gu0, Stateout%gv0, Model%fscav,              &
                              cld1d, rain1, kbot, ktop, kcnv,                       &
-                             islmsk, garea,                                        &
-                             Statein%vvl, ncld, ud_mf, dd_mf, dt_mf, cnvw, cnvc,   &
+                             islmsk, garea, Statein%vvl, ncld, Diag%hpbl,          &
+                             ud_mf, dd_mf, dt_mf, cnvw, cnvc,                      &
                              QLCN, QICN, w_upi,cf_upi, CNV_MFD,                    &
 !                            QLCN, QICN, w_upi,cf_upi, CNV_MFD, CNV_PRC3,          &
                              CNV_DQLDT,CLCN,CNV_FICE,CNV_NDROP,CNV_NICE,           &

@@ -1372,7 +1372,6 @@
       yynum = fdown - sfcems*sigma1*t24
       yy = sfctmp + (yynum/rch + th2 - sfctmp - beta*epsca)/rr
       zz1 = df1/(-0.5*zsoil(1)*rch*rr) + 1.0
-
       call shflx                                                        &
 !  ---  inputs:
      &     ( nsoil, smc, smcmax, dt, yy, zz1, zsoil, zbot,              &
@@ -3197,9 +3196,7 @@
      &     )
 
       else
-
 !  --- ...  land-mass case
-
         call hrt                                                        &
 !  ---  inputs:
      &     ( nsoil, stc, smc, smcmax, zsoil, yy, zz1, tbot,             &
@@ -3788,7 +3785,6 @@
 
           do while ( (nlog < 10) .and. (kcount == 0) )
             nlog = nlog + 1
-
             df = alog( (psis*gs2/lsubf) * ( (1.0 + ck*swl)**2.0 )       &
      &         * (smcmax/(smc-swl))**bx ) - alog(-(tkelv-tfreez)/tkelv)
 
@@ -4174,7 +4170,6 @@
           else
             tavg = stc(k)
           endif
-
           call snksrc                                                   &
 !  ---  inputs:
      &     ( nsoil, k, tavg, smc(k), smcmax, psisat, bexp, dt,          &
@@ -4662,7 +4657,6 @@
 !           routine frh2o use form of eqn in kelvin units.)
 
 !     free = frh2o( tavg,smc,sh2o,smcmax,bexp,psisat )
-
       call frh2o                                                        &
 !  ---  inputs:
      &     ( tavg, smc, sh2o, smcmax, bexp, psisat,                     &
