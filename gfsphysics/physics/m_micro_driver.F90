@@ -1041,10 +1041,6 @@
      &                 q1(i,k), qlls(i,k), qlcn(i,k), qils(i,k), qicn(i,k),       &
      &                 temp(i,k), clls(i,k), clcn(i,k), sc_ice(i,k),              &
      &                 ncpi(i,k), ncpl(i,k))
-               if(xlat(i)>-.275.and.xlat(i)<-.274.and.xlon(i)>5.153.and.xlon(i)<5.154.and.k==38)  &
-     &        write(*,*)"AAA4", k, xlat(i),xlon(i),clcn(i,k),clls(i,k)
-               if(xlat(i)>-.301.and.xlat(i)<-.300.and.xlon(i)>5.151.and.xlon(i)<5.152.and.k==34)  &
-     &        write(*,*)"AAA4", k, xlat(i),xlon(i),clcn(i,k),clls(i,k)
             end if
           enddo
         enddo
