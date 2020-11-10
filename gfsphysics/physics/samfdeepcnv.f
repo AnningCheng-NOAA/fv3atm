@@ -221,7 +221,7 @@ c  physical parameters
       parameter(clamd=0.03,tkemx=0.65,tkemn=0.05)
       parameter(dtke=tkemx-tkemn)
       parameter(dbeta=0.1)
-      parameter(cthk=150.,dthk=25.,pblffac=1.0)
+      parameter(cthk=150.,dthk=25.,pblffac=2.0)
       parameter(cinpcrmx=180.,cinpcrmn=120.)
 !     parameter(cinacrmx=-120.,cinacrmn=-120.)
       parameter(cinacrmx=-120.,cinacrmn=-80.)
