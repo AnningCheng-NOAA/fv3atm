@@ -89,7 +89,7 @@ module cs_conv
 !                                 ALP0 = 8.0e7,  & ! alpha parameter in prognostic closure
 !                                 CLMP = (one-CLMD)*(PA+PA), &
 !                                 CLMDPA = CLMD*PA,          &
-                                  spblmin=0.05, &  ! minimum cloudbase height in p/ps
+                                  spblmin=0.15, &  ! minimum cloudbase height in p/ps
                                   spblmax=0.30, &  ! maximum cloudbase height in p/ps
 !                                 spblcrit=0.03, & ! minimum cloudbase height in p/ps
 !                                 spblcrit=0.035,& ! minimum cloudbase height in p/ps
@@ -1022,7 +1022,7 @@ module cs_conv
      ENDDO
      DO I=ISTS,IENS
        IF (JBUOY(I) /= 2) CIN(I) = -999.D0
-       if (cin(i) < cincrit) kb(i) = -1
+       if (cin(i) < cincrit .or. CAPE(i) < 120.) kb(i) = -1
      ENDDO
 
 !DDsigma some initialization  before summing over cloud type
@@ -1921,9 +1921,10 @@ module cs_conv
             GAMX    = FDQS(I,K) / (one+GAM(I,K)) * oneocp
             QSL(i)  = GDQS(I,K) + GAMX * (GDH(I,KLCLB)-GDHS(I,K))
             spbl(i) = one - gdpm(i,k) * tx1(i)
-            IF (GDW(I,KLCLB) >= QSL(i) .and. kb(i) < 0              &
-                                       .and. spbl(i) >= spblmin) THEN
+!           IF (GDW(I,KLCLB) >= QSL(i) .and. kb(i) < 0              &
+!                                      .and. spbl(i) >= spblmin) THEN
 !             .and. spbl(i) >= spblcrit .and. spbl(i) < spblcrit*10.0) THEN
+            IF (GDW(I,KLCLB) >= QSL(i) .and. kb(i) < 0 ) then
               KB(I) = K + KBOFS
             ENDIF
           ENDDO
@@ -2760,8 +2761,8 @@ module cs_conv
 !   [INTERNAL PARAM]
       REAL(r8) :: FMAX   = 1.5e-2_r8         ! maximum flux
 !     REAL(r8) :: RHMCRT = zero              ! critical val. of cloud mean RH
-      REAL(r8) :: RHMCRT = 0.25_r8           ! critical val. of cloud mean RH
-!     REAL(r8) :: RHMCRT = 0.50_r8           ! critical val. of cloud mean RH
+!     REAL(r8) :: RHMCRT = 0.25_r8           ! critical val. of cloud mean RH
+      REAL(r8) :: RHMCRT = 0.75_r8           ! critical val. of cloud mean RH
       REAL(r8) :: ALP1   = zero
       REAL(r8) :: TAUD   = 1.e3_r8
 !     REAL(r8) :: TAUD   = 6.e2_r8

@@ -3180,8 +3180,8 @@ module GFS_typedefs
     real(kind=kind_phys) :: xkzm_s         = 1.0d0           !< [in] bkgd_vdif_s  sigma threshold for background mom. diffusion  
     real(kind=kind_phys) :: xkzminv        = 0.3             !< diffusivity in inversion layers
     real(kind=kind_phys) :: moninq_fac     = 1.0             !< turbulence diffusion coefficient factor
-    real(kind=kind_phys) :: dspfac         = 1.0             !< tke dissipative heating factor
-    real(kind=kind_phys) :: bl_upfr        = 0.13            !< updraft fraction in boundary layer mass flux scheme
+    real(kind=kind_phys) :: dspfac         = 0.5             !< tke dissipative heating factor
+    real(kind=kind_phys) :: bl_upfr        = 0.011           !< updraft fraction in boundary layer mass flux scheme
     real(kind=kind_phys) :: bl_dnfr        = 0.1             !< downdraft fraction in boundary layer mass flux scheme
 
 !--- parameters for canopy heat storage (CHS) parameterization

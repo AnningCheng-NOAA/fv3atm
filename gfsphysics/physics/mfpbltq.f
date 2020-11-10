@@ -61,9 +61,9 @@ c  local variables and arrays
       parameter(g=grav)
       parameter(gocp=g/cp)
       parameter(elocp=hvap/cp,el2orc=hvap*hvap/(rv*cp))
-      parameter(ce0=0.4,cm=1.0)
+      parameter(ce0=0.6,cm=1.0)
       parameter(qmin=1.e-8,qlmin=1.e-12)
-      parameter(alp=1.5,vprtmax=3.0,pgcon=0.55)
+      parameter(alp=1.0,vprtmax=3.0,pgcon=0.55)
       parameter(b1=0.5,f1=0.15)
 !
 !************************************************************************
@@ -197,7 +197,7 @@ c  local variables and arrays
             tem1 = bb2 * buo(i,k) * dz
             ptem = (1. - tem) * wu2(i,k-1)
             ptem1 = 1. + tem
-            wu2(i,k) = (ptem + tem1) / ptem1
+            wu2(i,k) = max((ptem + tem1) / ptem1,0.)
           endif
         enddo
       enddo
@@ -239,10 +239,8 @@ c  local variables and arrays
 !
       do i = 1,im
         if(cnvflg(i)) then
-          if(kpblx(i) < kpbl(i)) then
-            kpbl(i) = kpblx(i)
-            hpbl(i) = hpblx(i)
-          endif
+          kpbl(i) = min(kpblx(i),kpbl(i))
+          hpbl(i) = min(hpblx(i),hpbl(i))
           if(kpbl(i) <= 1) cnvflg(i)=.false.
         endif
       enddo

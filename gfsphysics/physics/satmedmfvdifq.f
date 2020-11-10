@@ -25,7 +25,7 @@
      &     tsea,heat,evap,stress,spd1,kpbl,
      &     prsi,del,prsl,prslk,phii,phil,delt,
      &     dspheat,dusfc,dvsfc,dtsfc,dqsfc,hpbl,
-     &     kinver,xkzm_m,xkzm_h,xkzm_s,dspfac,bl_upfr,bl_dnfr)
+     &     kinver,xkzm_m,xkzm_h,xkzm_s,dspfac,bl_upfr,bl_dnfr,xlat,xlon)
 !
       use machine  , only : kind_phys
       use funcphys , only : fpvs
@@ -41,7 +41,7 @@
       integer kpbl(im), kinver(im)
 !
       real(kind=kind_phys) delt, xkzm_m, xkzm_h, xkzm_s, dspfac,
-     &                     bl_upfr, bl_dnfr
+     &                     bl_upfr, bl_dnfr,xlat(im),xlon(im)
       real(kind=kind_phys) dv(im,km),     du(im,km),
      &                     tdt(im,km),    rtg(im,km,ntrac),
      &                     u1(ix,km),     v1(ix,km),
@@ -177,7 +177,7 @@
       parameter(vk=0.4,rimin=-100.)
       parameter(rbcr=0.25,zolcru=-0.02,tdzmin=1.e-3)
       parameter(rlmn=30.,rlmn1=5.,rlmn2=10.)
-      parameter(rlmx=300.,elmx=300.)
+      parameter(rlmx=150.,elmx=300.)
       parameter(prmin=0.25,prmax=4.0)
       parameter(pr0=1.0,prtke=1.0,prscu=0.67)
       parameter(f0=1.e-4,crbmin=0.15,crbmax=0.35)
@@ -187,7 +187,7 @@
       parameter(elmfac=1.0,elefac=1.0,cql=100.)
       parameter(dw2min=1.e-4,dkmax=1000.,xkgdx=5000.)
       parameter(qlcr=3.5e-5,zstblmax=2500.)
-      parameter(xkinv=0.3)
+      parameter(xkinv=0.2)
       parameter(h1=0.33333333,hcrinv=250.)
       parameter(ck0=0.4,ck1=0.15,ch0=0.4,ch1=0.15)
 !     parameter(ce0=0.4,cs0=0.5)
@@ -847,12 +847,13 @@
             ptem = 1. - 100. * zol(i)
             ptem1 = ptem**0.2
             zk = tem * ptem1
+
           elseif (zol(i) >= 1.) then
             zk = tem / 3.7
           else
             ptem = 1. + 2.7 * zol(i)
             zk = tem / ptem
-          endif 
+          end if
           elm(i,k) = zk*rlam(i,k)/(rlam(i,k)+zk)
 !
           dz = zi(i,k+1) - zi(i,k)
@@ -1193,6 +1194,11 @@ c
       do i=1,im
          ad(i,1) = 1.
          f1(i,1) = t1(i,1)   + dtdz1(i) * heat(i)
+             tem1=xlat(i)
+              tem2=xlon(i)
+          if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235) 
+     &         write(*,*)"BBBB3",t1(i,1),dtdz1(i) * heat(i)
+
          f2(i,1) = q1(i,1,1) + dtdz1(i) * evap(i)
       enddo
       if(ntrac1 >= 2) then
@@ -1225,7 +1231,13 @@ c
              ptem2     = dtodsu * ptem
              tem       = t1(i,k) + t1(i,k+1)
              ptem      = tcko(i,k) + tcko(i,k+1)
+               if(xlat(i)>0.4296.and.xlat(i)<0.4298
+     &  .and.xlon(i)>5.2348.and.xlon(i)<5.235)  
+     &         write(*,*)"BBBB4",-(ptem-tem)*ptem1,ptem1,del(i,k)
              f1(i,k)   = f1(i,k)+dtodsd*dsdzt-(ptem-tem)*ptem1
+               if(xlat(i)>0.4296.and.xlat(i)<0.4298
+     &  .and.xlon(i)>5.2348.and.xlon(i)<5.235)  
+     &         write(*,*)"BBBB5",-(ptem-tem)*ptem2,ptem2,del(i,k+1)
              f1(i,k+1) = t1(i,k+1)-dtodsu*dsdzt+(ptem-tem)*ptem2
              tem       = q1(i,k,1) + q1(i,k+1,1)
              ptem      = qcko(i,k,1) + qcko(i,k+1,1)
@@ -1244,6 +1256,9 @@ c
               ptem2     = dtodsu * ptem
               ptem      = tcdo(i,k) + tcdo(i,k+1)
               tem       = t1(i,k) + t1(i,k+1)
+               if(xlat(i)>0.4296.and.xlat(i)<0.4298.and
+     &  .xlon(i)>5.2348.and.xlon(i)<5.235)  
+     &         write(*,*)"BBBB6",f1(i,k),(ptem - tem) * ptem1,k
               f1(i,k)   = f1(i,k) + (ptem - tem) * ptem1
               f1(i,k+1) = f1(i,k+1) - (ptem - tem) * ptem2
               tem       = q1(i,k,1) + q1(i,k+1,1)

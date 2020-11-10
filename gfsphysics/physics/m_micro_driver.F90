@@ -445,9 +445,10 @@
          END DO
        END DO
 !      Anning Cheng, add clcn options for testing anvil cloud 07/13/2020
-      if (.not. skip_macro) then
+!     if (.false.) then
        do i=1,im
          do k=1,lm
+!          if (.false.) then
            tx1       = plo(i,k)*100.0
            est3      = min(tx1, fpvs(temp(i,k)))
            qstls = min(eps*est3/max(tx1+epsm1*est3,1.0e-10),1.0)
@@ -461,22 +462,17 @@
 !              clls(i,k)=clcn(i,k)*(qils(i,k)+qlls(i,k))/tx3
 !              clcn(i,k)=clcn(i,k)-clls(i,k)
                clls(i,k)=min(1.0 - clcn(i,k),clls(i,k))
-               if(xlat(i)>-.275.and.xlat(i)<-.274.and.xlon(i)>5.153.and.xlon(i)<5.154.and.k==32)  &
-     &         write(*,*)"AAA0", k, xlat(i),xlon(i),clcn(i,k),clls(i,k),rhls,exp(-tx2)
-               if(xlat(i)>-.301.and.xlat(i)<-.300.and.xlon(i)>5.151.and.xlon(i)<5.152.and.k==29)  &
-     &         write(*,*)"AAA0", k, xlat(i),xlon(i),clcn(i,k),clls(i,k),rhls,exp(-tx2)
            end if
-           if (.false.) then
+!          end if
                !rhls= max(0.0, (q1(i,k)+tx3)/qstls)
                !clcn(i,k)=min((rhls-0.8)*(rhls-0.8)/0.09,0.3)
-               clcn(i,k)= max(0.0,min(0.01*log(1.0+500*CNV_MFD(i,k)),0.6))
+               clcn(i,k)= max(0.0,min(0.04*log(1.0+675*CNV_MFD(i,k)),0.6))
                clls(i,k)=min(1.0 - clcn(i,k),clls(i,k))
                !clls(i,k)=clcn(i,k)*(qils(i,k)+qlls(i,k))/tx3
                !clcn(i,k)=clcn(i,k)-clls(i,k)
-           end if
          enddo
        enddo
-      end if
+!     end if
 
 !      do L=LM,1,-1
 !        do i=1,im
@@ -1126,8 +1122,6 @@
 
 !         tx1 = MIN(CLLS(I,k) + CLCN(I,k), 0.99)
           tx1 = MIN(CLLS(I,k) + CLCN(I,k), 1.00)
-!       if(xlat(i)>0.605.and.xlat(i)<0.606.and.xlon(i)>5.916.and.xlon(i)<5.92)  &
-!    &  write(*,*)"AAA1", k, xlat(i),xlon(i),tx1
           if (tx1 > 0.0) then
             cldfr8(k) = min(max(tx1, 0.00001), 1.0)
           else
@@ -1623,14 +1617,6 @@
 
         do k=1,lm
           do i=1,im
-               if(xlat(i)>-.275.and.xlat(i)<-.274.and.xlon(i)>5.153.and.xlon(i)<5.154.and.k==32)  &
-     &        write(*,*)"AAA2", k, xlat(i),xlon(i),clcn(i,k),clls(i,k)
-               if(xlat(i)>-.301.and.xlat(i)<-.300.and.xlon(i)>5.151.and.xlon(i)<5.152.and.k==29)  &
-     &        write(*,*)"AAA2", k, xlat(i),xlon(i),clcn(i,k),clls(i,k)
-               if(xlat(i)>-.275.and.xlat(i)<-.274.and.xlon(i)>5.153.and.xlon(i)<5.154.and.k==38)  &
-     &        write(*,*)"AAA5", k, xlat(i),xlon(i),clcn(i,k),clls(i,k)
-               if(xlat(i)>-.301.and.xlat(i)<-.300.and.xlon(i)>5.151.and.xlon(i)<5.152.and.k==34)  &
-     &        write(*,*)"AAA5", k, xlat(i),xlon(i),clcn(i,k),clls(i,k)
             QL_TOT(I,K) = QLLS(I,K) + QLCN(I,K)
             QI_TOT(I,K) = QILS(I,K) + QICN(I,K)
 !

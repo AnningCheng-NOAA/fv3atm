@@ -2925,7 +2925,8 @@ c
             w_upi(i,k)    = ud_mf(i,k)*t1(i,k)*rd /
      &                     (dt2*max(sigmagfm(i),1.e-12)*prslp(i,k))
             CNV_MFD(i,k)  = ud_mf(i,k)/dt2
-!           CLCN(i,k)     = cf_upi(i,k)
+            cf_upi(i,k) = cnvc(i,k)
+            CLCN(i,k)     = cf_upi(i,k)
             CNV_FICE(i,k) = QICN(i,k)
      &                    / max(1.e-10,QLCN(i,k)+QICN(i,k))
           enddo

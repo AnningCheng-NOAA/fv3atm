@@ -1006,6 +1006,12 @@ module module_physics_driver
 !*## CCPP ##
 
 !## CCPP ## Only get_prs_fv3.F90/get_prs_fv3_run is a scheme (GFS_HYDRO is assumed to be undefined)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA0",Stateout%gt0(i,1),dtdt(i,1) * dtf, Statein%tgrs(i,1)
+              end do
 #ifdef GFS_HYDRO
       call get_prs(im, ix, levs, ntrac, Statein%tgrs, Statein%qgrs,     &
                    Model%thermodyn_id, Model%sfcpress_id,               &
@@ -1017,6 +1023,12 @@ module module_physics_driver
                         Statein%tgrs, Statein%qgrs, del, del_gz)
 #endif
 !*## CCPP ##
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA1",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 
 !## CCPP ##* GFS_surface_generic.F90/GFS_surface_generic_pre_run
       do i = 1, IM
@@ -1437,6 +1449,12 @@ module module_physics_driver
 ! save temp change due to radiation - need for sttp stochastic physics
 !---------------------------------------------------------------------
       endif
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA2",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !
 !## CCPP ##* This is not in the CCPP yet.
       if (Model%lsidea) then                       !idea jw
@@ -1666,6 +1684,12 @@ module module_physics_driver
 !  ---  outputs:
            cd3, cdq3, rb3, stress3, ffmm3, ffhh3, fm103, fh23)
 !          cd3, cdq3, rb3, stress3, ffmm3, ffhh3, fm103, fh23, wind, lprnt, ipr)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA3",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !
 !  --- ...  lu: update flag_guess
 !*## CCPP ##
@@ -1730,6 +1754,12 @@ module module_physics_driver
 !  ---  outputs:
              qss3(:,3),  gflx3(:,3), cmm3(:,3), chh3(:,3), evap3(:,3),  &
              hflx3(:,3), ep1d3(:,3))
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA4",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
 !## CCPP ##* sfc_nst.f/sfc_nst_post_run
 
@@ -1777,6 +1807,12 @@ module module_physics_driver
 !  ---  outputs:
             qss3(:,3), cmm3(:,3), chh3(:,3), gflx3(:,3), evap3(:,3),    &
             hflx3(:,3), ep1d3(:,3))
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA5",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
 
         endif       ! if nstf_name(1) > 0
@@ -1819,6 +1855,12 @@ module module_physics_driver
             hflx3(:,1), ep1d3(:,1), runof,                               &
             cmm3(:,1),  chh3(:,1), evbs, evcw, sbsno, snowc, Diag%soilm, &
             snohf, Diag%smcwlt2, Diag%smcref2, Diag%wet1)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA6",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
 
 !     if (lprnt) write(0,*)' tseae=',tseal(ipr),' tsurf=',tsurf(ipr),iter&
@@ -1932,6 +1974,12 @@ module module_physics_driver
             qss3(:,2), cmm3(:,2), chh3(:,2), evap3(:,2), hflx3(:,2),     &
             stress3(:,2))
         endif
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA7",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
 
 !
@@ -1953,6 +2001,12 @@ module module_physics_driver
 !  ---  outputs:
             snowd3(:,2), qss3(:,2), snowmt, gflx3(:,2), cmm3(:,2), chh3(:,2),    &
             evap3(:,2),  hflx3(:,2))
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA8",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
 !## CCPP ##* This section is not needed for CCPP.
         if (Model%cplflx) then
@@ -2159,6 +2213,12 @@ module module_physics_driver
                      Statein%tgrs(:,1), Statein%qgrs(:,1,1), work3, evap,         &
                      Sfcprop%ffmm, Sfcprop%ffhh, fm10, fh2, Sfcprop%tsfc, qss,    &
                      Sfcprop%f10m, Diag%u10m, Diag%v10m, Sfcprop%t2m, Sfcprop%q2m)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA9",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
 
 !## CCPP ##* This block is not in the CCPP
@@ -2405,6 +2465,12 @@ module module_physics_driver
 !*## CCPP ##
              elseif (Model%isatmedmf == 1) then   ! updated version of satmedmfvdif (May 2019)
 !## CCPP ##* satmedmfvdifq.F/satmedmfvdifq_run Note: The conditional above is checked in satmedmfvdifq_init
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA10",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
                 call satmedmfvdifq(ix, im, levs, nvdiff, ntcw, ntiw, ntke,          &
                        dvdt, dudt, dtdt, dqdt,                                      &
                        Statein%ugrs, Statein%vgrs, Statein%tgrs, Statein%qgrs,      &
@@ -2415,7 +2481,13 @@ module module_physics_driver
                        Statein%prslk, Statein%phii, Statein%phil, dtp,              &
                        Model%dspheat, dusfc1, dvsfc1, dtsfc1, dqsfc1, Diag%hpbl,    &
                        kinver, Model%xkzm_m, Model%xkzm_h, Model%xkzm_s,            &
-                       Model%dspfac, Model%bl_upfr, Model%bl_dnfr)
+                       Model%dspfac, Model%bl_upfr, Model%bl_dnfr,Grid%xlat, Grid%xlon)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA11",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
              endif
           elseif (Model%hybedmf) then
@@ -2669,6 +2741,12 @@ module module_physics_driver
                          Model%dspheat, dusfc1, dvsfc1, dtsfc1, dqsfc1, Diag%hpbl,    &
                          kinver, Model%xkzm_m, Model%xkzm_h, Model%xkzm_s,            &
                          Model%dspfac, Model%bl_upfr, Model%bl_dnfr)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA12",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
              endif
           elseif (Model%hybedmf) then
@@ -3121,6 +3199,12 @@ module module_physics_driver
                zm_mtb,  zm_lwb,  zm_ogw,   ax_mtb, ax_ogw, ax_tms,            &
                Diag%zmtnblck, Diag%rain, ntke, tke, lprnt, ipr)
 
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA13",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 
 !Diag for COORDE-2019....... for cires_ugwp_driver_v0
 
@@ -3180,6 +3264,12 @@ module module_physics_driver
           enddo
         endif
       endif
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA14",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 
 !
 !===============================================
@@ -3203,6 +3293,12 @@ module module_physics_driver
                            Statein%ugrs, Statein%vgrs, dtp, con_cp, &
                            Model%levr, Statein%pgr, Statein%prsl,   &
                            Model%prslrd0, Model%ral_ts)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA15",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
       endif
 
 !     if (lprnt) then
@@ -3223,6 +3319,12 @@ module module_physics_driver
           Stateout%gv0(i,k)  = Statein%vgrs(i,k) + dvdt(i,k) * dtp
         enddo
       enddo
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA16",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
       Stateout%gq0(1:im,:,:) = Statein%qgrs(1:im,:,:) + dqdt(1:im,:,:) * dtp
 !*## CCPP ##
 
@@ -3264,6 +3366,12 @@ module module_physics_driver
                             Stateout%gt0, oz_pres, Statein%prsl,     &
                             Tbd%ozpl, oz_coeff, del, Model%ldiag3d,  &
                             dq3dt_loc(1,1,6), me)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA17",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
 !          if (Model%ldiag3d) then
 !            do k=1,levs
@@ -3283,6 +3391,12 @@ module module_physics_driver
                        Stateout%gt0, oz_pres, Statein%prsl,       &
                        Tbd%ozpl, oz_coeff, del, Model%ldiag3d,    &
                        dq3dt_loc(1,1,6), me)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA18",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
 !          if (Model%ldiag3d) then
 !            do k=1,levs
@@ -3304,6 +3418,12 @@ module module_physics_driver
                       Stateout%gq0(1,1,1), h2o_pres, Statein%prsl,     &
                       Tbd%h2opl, h2o_coeff, Model%ldiag3d,             &
                       dq3dt_loc(1,1,1), me)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA19",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
       endif
 
@@ -3371,6 +3491,12 @@ module module_physics_driver
 !GFDL   Adjust the height hydrostatically in a way consistent with FV3 discretization
       call get_phi_fv3 (ix, levs, ntrac, Stateout%gt0, Stateout%gq0, &
                         del_gz, Statein%phii, Statein%phil)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA20",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 #endif
 !*## CCPP ## 
 
@@ -3887,6 +4013,12 @@ module module_physics_driver
 !            not meters LWE like the other schemes.  It is converted to m after the call to cs_convr.
 
 !## CCPP ## cs_conv.F90/cs_conv_run
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA21",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
             call cs_convr (ix, im, levs, ntrac+1, nn, tottracer+3,          &
                            Model%nctp, otspt(1:ntrac+1,1:2), 1,             &
                            kdt, Stateout%gt0, Stateout%gq0(:,:,1:1), rain1, &
@@ -3902,6 +4034,12 @@ module module_physics_driver
                            w_upi, cf_upi, CNV_MFD,           CNV_DQLDT,     &
 !                          w_upi, cf_upi, CNV_MFD, CNV_PRC3, CNV_DQLDT,     &
                            CLCN, CNV_FICE, CNV_NDROP, CNV_NICE, imp_physics)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA22",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
 !           if (lprnt) write(0,*)'aftcsgt0=',Stateout%gt0(ipr,:)
 !           if (lprnt) write(0,*)'aftcstke=',clw(ipr,1:25,ntk)
@@ -5018,6 +5156,12 @@ module module_physics_driver
 !                            ipr, kdt, Grid%xlat, Grid%xlon)
                              Model%mg_alf, Model%mg_qcmin, Model%pdfflag,        &
                              ipr, kdt, Grid%xlat, Grid%xlon, rhc)
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA23",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
 !     do k=1,levs
 !     write(1000+me,*)' maxwatnca=',maxval(Stateout%gq0(1:im,k,ntlnc)),' k=',k,' kdt=',kdt
@@ -5728,6 +5872,12 @@ module module_physics_driver
         Diag%T02MAX(I)  = MAX(Diag%T02MAX(I), Sfcprop%t2m(i))  !<--- Hourly max 2m T
         Diag%T02MIN(I)  = MIN(Diag%T02MIN(I), Sfcprop%t2m(i))  !<--- Hourly min 2m T
       enddo
+              do i=1,im
+              tem1=Grid%xlat(i)
+              tem2=Grid%xlon(i)
+               if(tem1>0.4296.and.tem1<0.4298.and.tem2>5.2348.and.tem2<5.235)  &
+     &         write(*,*)"AAAA24",Stateout%gt0(i,1), Statein%tgrs(i,1)
+              end do
 !*## CCPP ##
 !     if (kdt > 2 ) stop
       return
