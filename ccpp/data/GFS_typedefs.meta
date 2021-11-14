@@ -2728,6 +2728,12 @@
   units = flag
   dimensions = ()
   type = logical
+[mr2tl6]
+  standard_name = flag_for_reading_merra2_in_tile6_format
+  long_name = flag for reading merra2 in tile6 format
+  units = flag
+  dimensions = ()
+  type = logical
 [ntrcaer]
   standard_name = number_of_aerosol_tracers_MG
   long_name = number of aerosol tracers for Morrison Gettelman MP

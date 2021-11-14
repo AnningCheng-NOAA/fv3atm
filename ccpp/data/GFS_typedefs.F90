@@ -669,6 +669,7 @@ module GFS_typedefs
     integer              :: levrp1          !< number of vertical levels for radiation calculations plus one
     integer              :: nfxr            !< second dimension for fluxr diagnostic variable (radiation)
     logical              :: iaerclm         !< flag for initializing aerosol data
+    logical              :: mr2tl6          !< flag for reading merra2 in title format
     integer              :: ntrcaer         !< number of aerosol tracers for Morrison-Gettelman microphysics
     logical              :: lmfshal         !< parameter for radiation
     logical              :: lmfdeep2        !< parameter for radiation
@@ -3187,6 +3188,7 @@ module GFS_typedefs
 
     !--- Thompson microphysical parameters
     logical              :: ltaerosol      = .false.            !< flag for aerosol version
+    logical              :: mr2tl6         = .false.            !< flag for reading merra2 in tile format
     logical              :: lradar         = .false.            !< flag for radar reflectivity
     real(kind=kind_phys) :: nsradar_reset  = -999.0             !< seconds between resetting radar reflectivity calculation, set to <0 for every time step
     real(kind=kind_phys) :: ttendlim       = -999.0             !< temperature tendency limiter, set to <0 to deactivate
@@ -3552,7 +3554,7 @@ module GFS_typedefs
                                use_LW_jacobian, doGP_lwscat, damp_LW_fluxadj, lfnc_k,       &
                                lfnc_p0,                                                     &
                           ! IN CCN forcing
-                               iccn,                                                        &
+                               iccn, mr2tl6,                                                &
                           !--- microphysical parameterizations
                                imp_physics, psautco, prautco, evpco, wminco,                &
                                fprcp, pdfflag, mg_dcs, mg_qcvar, mg_ts_auto_ice, mg_rhmini, &
@@ -3880,6 +3882,7 @@ module GFS_typedefs
 
     Model%nfxr             = nfxr
     Model%iccn             = iccn
+    Model%mr2tl6           = mr2tl6
     ! further down: set Model%iccn to .false.
     ! for all microphysics schemes except
     ! MG2/3 (these are the only ones using ICCN)
@@ -5476,6 +5479,7 @@ module GFS_typedefs
       print *, ' ialb              : ', Model%ialb
       print *, ' iems              : ', Model%iems
       print *, ' iaer              : ', Model%iaer
+      print *, ' mr2tl6            : ', Model%mr2tl6
       print *, ' icliq_sw          : ', Model%icliq_sw
       print *, ' icice_sw          : ', Model%icice_sw
       print *, ' icliq_lw          : ', Model%icliq_lw
